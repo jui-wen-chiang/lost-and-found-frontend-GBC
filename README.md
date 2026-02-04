@@ -1,16 +1,17 @@
-# React + Vite
+# Frontend - Lost and Found Management System
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**[Main Repositories](https://github.com/jui-wen-chiang/lost-and-found-GBC-main)**
 
-Currently, two official plugins are available:
+The user-facing interface of the Lost and Found Management System. It offers an intuitive, responsive, and modern web experience, allowing users to easily report lost items, search for found objects, and track status updates in real-time.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Frontend Development Setup
+1. Clone the repository
+2. Navigate to the project directory: `cd lost-and-found-frontend`
+3. Install dependencies: `npm install` or `yarn install`
+4. Configure environment variables. Create and set up your `.env.development` file.
+5. Start the development server: `npm run dev`
 
-## React Compiler
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Deployment & Local Access
+- Production (Vercel): [Lost and Found Management System for George Brown College ](https://lost-and-found-frontend-gbc.vercel.app/)
+- Local Development: [http://localhost:5173/](http://localhost:5173/)
