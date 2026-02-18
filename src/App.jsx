@@ -1,94 +1,33 @@
-// import { useState } from 'react'
-// import reactLogo from './assets/react.svg'
-// import viteLogo from '/vite.svg'
-// import './App.css'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import NavBar from './components/NavBar'
 
-// function App() {
-//   const [count, setCount] = useState(0)
-
-//   return (
-//     <>
-//       <div>
-//         <a href="https://vite.dev" target="_blank">
-//           <img src={viteLogo} className="logo" alt="Vite logo" />
-//         </a>
-//         <a href="https://react.dev" target="_blank">
-//           <img src={reactLogo} className="logo react" alt="React logo" />
-//         </a>
-//       </div>
-//       <h1>Vite + React</h1>
-//       <div className="card">
-//         <button onClick={() => setCount((count) => count + 1)}>
-//           count is {count}
-//         </button>
-//         <p>
-//           Edit <code>src/App.jsx</code> and save to test HMR
-//         </p>
-//       </div>
-//       <p className="read-the-docs">
-//         Click on the Vite and React logos to learn more
-//       </p>
-//     </>
-//   )
-// }
-
-// export default App
-import { useState } from 'react'
-import axios from 'axios'
-import './App.css'
-
-const API_URL = import.meta.env.VITE_API_URL
+import LoginPage from './pages/LoginPage'
+import RegisterPage from './pages/RegisterPage'
+import HomePage from './pages/HomePage'
+import ItemDetailPage from './pages/ItemDetailPage'
+import ReportItemPage from './pages/ReportItemPage'
+import MyPostsPage from './pages/MyPostsPage'
+import EditPostPage from './pages/EditPostPage'
+import AppointmentsPage from './pages/AppointmentsPage'
+import CouponsPage from './pages/CouponsPage'
 
 function App() {
-  const [message, setMessage] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-
-  const testAPI = async () => {
-    setLoading(true)
-    setError('')
-    setMessage('')
-    
-    try {
-      const response = await axios.get(`${API_URL}/api/hello/`)
-      setMessage(response.data.message)
-    } catch (err) {
-      setError('Failed to connect to backend: ' + err.message)
-      console.error(err)
-    } finally {
-      setLoading(false)
-    }
-  }
-
   return (
-    <div className="App">
-      <header className="App-header">
-        <h1>Lost & Found Platform</h1>
-        <p>Frontend Demo</p>
-        
-        <div className="card">
-          <button onClick={testAPI} disabled={loading}>
-            {loading ? 'Testing...' : 'Test Backend Connection'}
-          </button>
-          
-          {message && (
-            <div className="success">
-              ✅ {message}
-            </div>
-          )}
-          
-          {error && (
-            <div className="error">
-              ❌ {error}
-            </div>
-          )}
-        </div>
+    <BrowserRouter>
+      <NavBar />
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
 
-        <div className="info">
-          <p>API URL: {API_URL}</p>
-        </div>
-      </header>
-    </div>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/items/new" element={<ReportItemPage />} />
+        <Route path="/items/:id" element={<ItemDetailPage />} />
+        <Route path="/my-posts" element={<MyPostsPage />} />
+        <Route path="/my-posts/:id/edit" element={<EditPostPage />} />
+        <Route path="/appointments" element={<AppointmentsPage />} />
+        <Route path="/coupons" element={<CouponsPage />} />
+      </Routes>
+    </BrowserRouter>
   )
 }
 
