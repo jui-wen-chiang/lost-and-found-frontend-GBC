@@ -1,3 +1,7 @@
+# MacOS
+.DS_store
+mynote.md
+
 # env
 .env.development
 .env.production
