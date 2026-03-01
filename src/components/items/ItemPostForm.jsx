@@ -2,6 +2,7 @@ import { useState } from 'react'
 import {
   Box,
   Button,
+  Divider,
   FormControl,
   FormControlLabel,
   FormLabel,
@@ -11,7 +12,9 @@ import {
   RadioGroup,
   Select,
   TextField,
+  Typography,
 } from '@mui/material'
+import PhotoUpload from './PhotoUpload'
 
 export const CATEGORIES = [
   { id: 1, name: 'Electronics' },
@@ -38,6 +41,7 @@ const EMPTY_FORM = {
   description: '',
   location_id: '',
   date_lost_found: '',
+  photos: [],
 }
 
 function ItemPostForm({ initialValues = {}, onSubmit, onCancel, submitLabel = 'Submit' }) {
@@ -119,6 +123,17 @@ function ItemPostForm({ initialValues = {}, onSubmit, onCancel, submitLabel = 'S
         required
         fullWidth
       />
+
+      <Divider />
+      <Box>
+        <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+          Photos (optional)
+        </Typography>
+        <PhotoUpload
+          photos={form.photos}
+          onChange={(photos) => setForm((prev) => ({ ...prev, photos }))}
+        />
+      </Box>
 
       <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
         {onCancel && (
