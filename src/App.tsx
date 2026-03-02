@@ -10,6 +10,7 @@ import MyPostsPage from './pages/MyPostsPage'
 import EditPostPage from './pages/EditPostPage'
 import AppointmentsPage from './pages/AppointmentsPage'
 import CouponsPage from './pages/CouponsPage'
+import UserDashboardPage from './pages/UserDashboardPage'
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
         <Route path="/items/:id" element={<ItemDetailPage />} />
         <Route path="/my-posts" element={<MyPostsPage />} />
         <Route path="/my-posts/:id/edit" element={<EditPostPage />} />
+        <Route path="/dashboard" element={<UserDashboardPage />} />
         <Route path="/appointments" element={<AppointmentsPage />} />
         <Route path="/coupons" element={<CouponsPage />} />
       </Routes>
