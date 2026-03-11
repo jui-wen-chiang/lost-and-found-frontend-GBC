@@ -13,7 +13,10 @@ import CouponsPage from './pages/CouponsPage'
 import UserDashboardPage from './pages/UserDashboardPage'
 import ClaimRequestPage from './pages/ClaimRequestPage'
 import MyClaimsPage from './pages/MyClaimsPage'
-
+import AppointmentSchedulerPage from './pages/AppointmentSchedulerPage'
+import AppointmentConfirmationPage from './pages/AppointmentConfirmationPage'
+import AdminAuditQueuePage from './pages/AdminAuditQueuePage'
+import AdminAuditDetailPage from './pages/AdminAuditDetailPage'
 
 function App() {
   return (
@@ -34,6 +37,10 @@ function App() {
         <Route path="/coupons" element={<CouponsPage />} />
         <Route path="/claims" element={<MyClaimsPage />} />
         <Route path="/claims/new/:itemId" element={<ClaimRequestPage />} />
+        <Route path="/appointments/schedule/:itemId" element={<AppointmentSchedulerPage />} />
+        <Route path="/appointments/confirm" element={<AppointmentConfirmationPage />} />
+        <Route path="/admin/audit" element={<AdminAuditQueuePage />} />
+        <Route path="/admin/audit/:id" element={<AdminAuditDetailPage />} />
       </Routes>
     </BrowserRouter>
   )
