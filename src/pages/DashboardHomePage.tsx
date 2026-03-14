@@ -1,12 +1,42 @@
-import React from "react";
+import { useMemo } from "react";
+import { CircularProgress, Alert, Button } from "@mui/material";
+import { useItems } from "../hooks/useItems";
+import { useAuth } from "../context/AuthContext";
+import { getErrorMessage, isAuthError } from "../utils/errorMessages";
 
 export default function DashboardHomePage() {
-  const stats = [
-    { label: "Total Reports", value: 5 },
-    { label: "In Progress", value: 2 },
-    { label: "Found", value: 1 },
-    { label: "Expired", value: 2 },
-  ];
+  const { user } = useAuth();
+  const { data: apiItems, isLoading, error } = useItems();
+
+  const stats = useMemo(() => {
+    const mine = (apiItems ?? []).filter((i) => i.owner === user?.id);
+    return [
+      { label: "Total Reports", value: mine.length },
+      { label: "Pending", value: mine.filter((i) => i.status === "pending").length },
+      { label: "Found", value: mine.filter((i) => i.item_type === "found").length },
+      { label: "Completed", value: mine.filter((i) => i.status === "completed").length },
+    ];
+  }, [apiItems, user]);
+
+  if (isLoading) {
+    return (
+      <div style={{ padding: "24px", textAlign: "center" }}>
+        <CircularProgress />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ padding: "24px" }}>
+        <Alert severity={isAuthError(error) ? 'info' : 'error'}
+          action={isAuthError(error) ? <Button color="inherit" size="small" href="/login">Sign In</Button> : undefined}
+        >
+          {getErrorMessage(error, 'Failed to load dashboard data.')}
+        </Alert>
+      </div>
+    );
+  }
 
   return (
     <div style={{ padding: "24px" }}>

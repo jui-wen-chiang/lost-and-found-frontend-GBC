@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import NavBar from './components/NavBar'
+import ProtectedRoute from './components/ProtectedRoute'
 
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
@@ -37,34 +38,37 @@ function App() {
     <BrowserRouter>
       <NavBar />
       <Routes>
+        {/* Public routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-
         <Route path="/" element={<HomePage />} />
-        <Route path="/items/new" element={<ReportItemPage />} />
+
+        {/* Authenticated user routes */}
+        <Route path="/items/new" element={<ProtectedRoute><ReportItemPage /></ProtectedRoute>} />
         <Route path="/items/:id" element={<ItemDetailPage />} />
-        <Route path="/my-posts" element={<MyPostsPage />} />
-        <Route path="/my-posts/:id/edit" element={<EditPostPage />} />
-        <Route path="/dashboard" element={<UserDashboardPage />} />
-        <Route path="/dashboard/lost" element={<MyLostReportsPage />} />
-        <Route path="/dashboard/found" element={<MyFoundReportsPage />} />
-        <Route path="/appointments" element={<AppointmentsPage />} />
-        <Route path="/coupons" element={<CouponsPage />} />
-        <Route path="/coupons/instructions" element={<CouponInstructionsPage />} />
-        <Route path="/coupons/:id/scan" element={<CouponScanPage />} />
-        <Route path="/claims" element={<MyClaimsPage />} />
-        <Route path="/claims/new/:itemId" element={<ClaimRequestPage />} />
-        <Route path="/appointments/schedule/:itemId" element={<AppointmentSchedulerPage />} />
-        <Route path="/appointments/confirm" element={<AppointmentConfirmationPage />} />
+        <Route path="/my-posts" element={<ProtectedRoute><MyPostsPage /></ProtectedRoute>} />
+        <Route path="/my-posts/:id/edit" element={<ProtectedRoute><EditPostPage /></ProtectedRoute>} />
+        <Route path="/dashboard" element={<ProtectedRoute><UserDashboardPage /></ProtectedRoute>} />
+        <Route path="/dashboard/home" element={<ProtectedRoute><DashboardHomePage /></ProtectedRoute>} />
+        <Route path="/dashboard/lost" element={<ProtectedRoute><MyLostReportsPage /></ProtectedRoute>} />
+        <Route path="/dashboard/found" element={<ProtectedRoute><MyFoundReportsPage /></ProtectedRoute>} />
+        <Route path="/appointments" element={<ProtectedRoute><AppointmentsPage /></ProtectedRoute>} />
+        <Route path="/coupons" element={<ProtectedRoute><CouponsPage /></ProtectedRoute>} />
+        <Route path="/coupons/instructions" element={<ProtectedRoute><CouponInstructionsPage /></ProtectedRoute>} />
+        <Route path="/coupons/:id/scan" element={<ProtectedRoute><CouponScanPage /></ProtectedRoute>} />
+        <Route path="/claims" element={<ProtectedRoute><MyClaimsPage /></ProtectedRoute>} />
+        <Route path="/claims/new/:itemId" element={<ProtectedRoute><ClaimRequestPage /></ProtectedRoute>} />
+        <Route path="/appointments/schedule/:itemId" element={<ProtectedRoute><AppointmentSchedulerPage /></ProtectedRoute>} />
+        <Route path="/appointments/confirm" element={<ProtectedRoute><AppointmentConfirmationPage /></ProtectedRoute>} />
 
         {/* Admin routes */}
-        <Route path="/admin" element={<AdminDashboardPage />} />
-        <Route path="/admin/audit" element={<AdminAuditQueuePage />} />
-        <Route path="/admin/audit/:id" element={<AdminAuditDetailPage />} />
-        <Route path="/admin/appointments" element={<AdminAppointmentsPage />} />
-        <Route path="/admin/reports" element={<ReportsPage />} />
-        <Route path="/admin/iam" element={<IamPage />} />
-        <Route path="/admin/verify" element={<PostVerificationPage />} />
+        <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><AdminDashboardPage /></ProtectedRoute>} />
+        <Route path="/admin/audit" element={<ProtectedRoute requiredRole="admin"><AdminAuditQueuePage /></ProtectedRoute>} />
+        <Route path="/admin/audit/:id" element={<ProtectedRoute requiredRole="admin"><AdminAuditDetailPage /></ProtectedRoute>} />
+        <Route path="/admin/appointments" element={<ProtectedRoute requiredRole="admin"><AdminAppointmentsPage /></ProtectedRoute>} />
+        <Route path="/admin/reports" element={<ProtectedRoute requiredRole="admin"><ReportsPage /></ProtectedRoute>} />
+        <Route path="/admin/iam" element={<ProtectedRoute requiredRole="admin"><IamPage /></ProtectedRoute>} />
+        <Route path="/admin/verify" element={<ProtectedRoute requiredRole="admin"><PostVerificationPage /></ProtectedRoute>} />
       </Routes>
     </BrowserRouter>
   )

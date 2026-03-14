@@ -4,6 +4,7 @@ import {
   Alert,
   Box,
   Button,
+  CircularProgress,
   Container,
   Link,
   Paper,
@@ -30,15 +31,23 @@ function getPasswordChecks(password: string) {
 
 function RegisterPage() {
   const navigate = useNavigate()
-  const { login } = useAuth()
+  const { register } = useAuth()
 
+  const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [touched, setTouched] = useState({ email: false, password: false, confirm: false })
+  const [touched, setTouched] = useState({ fullName: false, email: false, password: false, confirm: false })
   const [submitError, setSubmitError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
   const checks = useMemo(() => getPasswordChecks(password), [password])
+
+  const fullNameError = (() => {
+    if (!touched.fullName) return ''
+    if (!fullName.trim()) return 'Full name is required.'
+    return ''
+  })()
 
   const emailError = (() => {
     if (!touched.email) return ''
@@ -63,24 +72,42 @@ function RegisterPage() {
   })()
 
   const canSubmit =
+    fullName.trim() &&
     email.trim() &&
     emailRegex.test(email.trim()) &&
     password &&
     Object.values(checks).every(Boolean) &&
     confirmPassword &&
-    confirmPassword === password
+    confirmPassword === password &&
+    !submitting
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSubmitError('')
-
-    // Force errors to show if user clicks submit too early
-    setTouched({ email: true, password: true, confirm: true })
+    setTouched({ fullName: true, email: true, password: true, confirm: true })
     if (!canSubmit) return
 
-    // ✅ For now: mock success (backend integration later)
-    login({ email: email.trim(), role: 'student' })
-    navigate('/')
+    setSubmitting(true)
+    try {
+      await register({
+        email: email.trim().toLowerCase(),
+        full_name: fullName.trim(),
+        role: 'student',
+        password,
+        password_confirm: confirmPassword,
+      })
+      navigate('/')
+    } catch (err: unknown) {
+      const data = (err as { response?: { data?: Record<string, unknown> } })?.response?.data
+      if (data) {
+        const messages = Object.values(data).flat().join(' ')
+        setSubmitError(messages || 'Registration failed.')
+      } else {
+        setSubmitError('Registration failed. Please try again.')
+      }
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const passwordChecks: [boolean, string][] = [
@@ -106,6 +133,17 @@ function RegisterPage() {
 
         <Box component="form" onSubmit={onSubmit} noValidate>
           <Stack spacing={2.5}>
+            <TextField
+              label="Full Name"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              onBlur={() => setTouched((t) => ({ ...t, fullName: true }))}
+              error={!!fullNameError}
+              helperText={fullNameError || ' '}
+              autoComplete="name"
+              fullWidth
+            />
+
             <TextField
               label="Email"
               type="email"
@@ -163,8 +201,9 @@ function RegisterPage() {
               size="large"
               fullWidth
               disabled={!canSubmit}
+              startIcon={submitting ? <CircularProgress size={20} color="inherit" /> : undefined}
             >
-              Create account
+              {submitting ? 'Creating account…' : 'Create account'}
             </Button>
 
             <Typography variant="body2" textAlign="center">

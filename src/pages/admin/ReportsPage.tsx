@@ -1,8 +1,10 @@
 import { useState, useMemo } from 'react'
 import {
+  Alert,
   Box,
   Button,
   Chip,
+  CircularProgress,
   Container,
   Divider,
   FormControl,
@@ -25,36 +27,35 @@ import {
   FilterList as FilterIcon,
   Report as ReportIcon,
 } from '@mui/icons-material'
-import type { Item } from 'src/types/item'
+import { useUnclaimedItems } from '../../hooks/useReports'
+import { useCategories } from '../../hooks/useCategories'
+import { useLocations } from '../../hooks/useLocations'
 
-// ─── Mock data (replace with API call when backend is ready) ──────────────────
+// ─── Row type for display ─────────────────────────────────────────────────────
 
-const MOCK_UNCLAIMED: Item[] = [
-  { id: 1, type: 'found', title: 'Black Wallet', category_id: 1, category: 'Accessories', location_id: 1, location: 'Library', campus: 'Waterfront', date_lost_found: '2026-02-01', status: 'unclaimed', posted_by: 'John D.' },
-  { id: 2, type: 'found', title: 'Blue Backpack', category_id: 2, category: 'Bags', location_id: 2, location: 'Cafeteria', campus: 'North', date_lost_found: '2026-02-10', status: 'unclaimed', posted_by: 'Sara M.' },
-  { id: 3, type: 'found', title: 'Student Card', category_id: 3, category: 'ID / Cards', location_id: 3, location: 'Gym', campus: 'Downtown', date_lost_found: '2026-01-25', status: 'unclaimed', posted_by: 'Alex K.' },
-  { id: 4, type: 'found', title: 'Airpods Case', category_id: 1, category: 'Electronics', location_id: 1, location: 'Classroom 201', campus: 'Waterfront', date_lost_found: '2026-01-30', status: 'unclaimed', posted_by: 'Maria L.' },
-  { id: 5, type: 'found', title: 'Red Scarf', category_id: 4, category: 'Clothing', location_id: 2, location: 'Hallway B', campus: 'North', date_lost_found: '2026-02-14', status: 'unclaimed', posted_by: 'Tom B.' },
-  { id: 6, type: 'found', title: 'House Keys', category_id: 5, category: 'Keys', location_id: 3, location: 'Parking Lot', campus: 'Downtown', date_lost_found: '2026-02-20', status: 'unclaimed', posted_by: 'Nina S.' },
-  { id: 7, type: 'found', title: 'Umbrella', category_id: 6, category: 'Other', location_id: 1, location: 'Entrance', campus: 'Waterfront', date_lost_found: '2026-03-01', status: 'unclaimed', posted_by: 'Paul R.' },
-  { id: 8, type: 'found', title: 'Glasses', category_id: 1, category: 'Accessories', location_id: 2, location: 'Study Room', campus: 'North', date_lost_found: '2026-03-05', status: 'unclaimed', posted_by: 'Elena V.' },
-]
-
-const CATEGORIES = ['All', 'Electronics', 'Clothing', 'ID / Cards', 'Bags', 'Keys', 'Accessories', 'Other']
-const CAMPUSES = ['All', 'Waterfront', 'North', 'Downtown']
+interface DisplayRow {
+  id: number
+  title: string
+  category: string
+  location: string
+  campus: string
+  dateFound: string
+  status: string
+  daysOverdue: number
+}
 
 // ─── CSV export helper ────────────────────────────────────────────────────────
 
-function exportToCSV(items: Item[]) {
-  const headers = ['ID', 'Title', 'Category', 'Location', 'Campus', 'Date Found', 'Posted By', 'Status']
+function exportToCSV(items: DisplayRow[]) {
+  const headers = ['ID', 'Title', 'Category', 'Location', 'Campus', 'Date Found', 'Days Overdue', 'Status']
   const rows = items.map((item) => [
     item.id,
     `"${item.title}"`,
     item.category,
     `"${item.location}"`,
-    item.campus ?? '',
-    item.date_lost_found,
-    item.posted_by ?? '',
+    item.campus,
+    item.dateFound,
+    item.daysOverdue,
     item.status,
   ])
   const csv = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n')
@@ -70,20 +71,45 @@ function exportToCSV(items: Item[]) {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 function ReportsPage() {
+  const { data: report, isLoading, error } = useUnclaimedItems()
+  const { data: categories = [] } = useCategories()
+  const { data: locations = [] } = useLocations()
+
   const [category, setCategory] = useState('All')
   const [campus, setCampus] = useState('All')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
 
+  const catMap = useMemo(() => Object.fromEntries(categories.map((c) => [c.id, c.name])), [categories])
+  const locMap = useMemo(() => Object.fromEntries(locations.map((l) => [l.id, { name: l.name, campus: l.campus ?? '' }])), [locations])
+
+  const rows: DisplayRow[] = useMemo(
+    () =>
+      (report?.items ?? []).map((item) => ({
+        id: item.id,
+        title: item.title,
+        category: catMap[item.category] ?? 'Unknown',
+        location: locMap[item.location]?.name ?? 'Unknown',
+        campus: locMap[item.location]?.campus ?? '',
+        dateFound: item.found_at ?? item.created_at.slice(0, 10),
+        status: item.status,
+        daysOverdue: item.days_overdue,
+      })),
+    [report, catMap, locMap],
+  )
+
+  const categoryOptions = useMemo(() => ['All', ...new Set(rows.map((r) => r.category))], [rows])
+  const campusOptions = useMemo(() => ['All', ...new Set(rows.map((r) => r.campus).filter(Boolean))], [rows])
+
   const filtered = useMemo(() => {
-    return MOCK_UNCLAIMED.filter((item) => {
+    return rows.filter((item) => {
       if (category !== 'All' && item.category !== category) return false
       if (campus !== 'All' && item.campus !== campus) return false
-      if (dateFrom && item.date_lost_found < dateFrom) return false
-      if (dateTo && item.date_lost_found > dateTo) return false
+      if (dateFrom && item.dateFound < dateFrom) return false
+      if (dateTo && item.dateFound > dateTo) return false
       return true
     })
-  }, [category, campus, dateFrom, dateTo])
+  }, [rows, category, campus, dateFrom, dateTo])
 
   const hasActiveFilters = category !== 'All' || campus !== 'All' || !!dateFrom || !!dateTo
 
@@ -92,6 +118,22 @@ function ReportsPage() {
     setCampus('All')
     setDateFrom('')
     setDateTo('')
+  }
+
+  if (isLoading) {
+    return (
+      <Container maxWidth="xl" sx={{ py: 8, textAlign: 'center' }}>
+        <CircularProgress />
+      </Container>
+    )
+  }
+
+  if (error) {
+    return (
+      <Container maxWidth="xl" sx={{ py: 4 }}>
+        <Alert severity="error">Failed to load unclaimed items report.</Alert>
+      </Container>
+    )
   }
 
   return (
@@ -135,14 +177,14 @@ function ReportsPage() {
           <FormControl size="small" sx={{ minWidth: 160 }}>
             <InputLabel>Category</InputLabel>
             <Select value={category} onChange={(e) => setCategory(e.target.value)} label="Category">
-              {CATEGORIES.map((c) => <MenuItem key={c} value={c}>{c}</MenuItem>)}
+              {categoryOptions.map((c) => <MenuItem key={c} value={c}>{c}</MenuItem>)}
             </Select>
           </FormControl>
 
           <FormControl size="small" sx={{ minWidth: 160 }}>
             <InputLabel>Campus</InputLabel>
             <Select value={campus} onChange={(e) => setCampus(e.target.value)} label="Campus">
-              {CAMPUSES.map((c) => <MenuItem key={c} value={c}>{c}</MenuItem>)}
+              {campusOptions.map((c) => <MenuItem key={c} value={c}>{c}</MenuItem>)}
             </Select>
           </FormControl>
 
@@ -180,7 +222,7 @@ function ReportsPage() {
                 <TableCell sx={{ fontWeight: 700 }}>Location</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Campus</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Date Found</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Posted By</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Days Overdue</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
               </TableRow>
             </TableHead>
@@ -199,8 +241,8 @@ function ReportsPage() {
                     <TableCell>{item.category}</TableCell>
                     <TableCell>{item.location}</TableCell>
                     <TableCell>{item.campus}</TableCell>
-                    <TableCell>{item.date_lost_found}</TableCell>
-                    <TableCell>{item.posted_by}</TableCell>
+                    <TableCell>{item.dateFound}</TableCell>
+                    <TableCell>{item.daysOverdue}</TableCell>
                     <TableCell>
                       <Chip label="Unclaimed" size="small" color="warning" variant="outlined" />
                     </TableCell>
@@ -215,7 +257,7 @@ function ReportsPage() {
             <Divider />
             <Box sx={{ p: 1.5, textAlign: 'right' }}>
               <Typography variant="caption" color="text.secondary">
-                Showing {filtered.length} of {MOCK_UNCLAIMED.length} unclaimed items
+                Showing {filtered.length} of {report?.count ?? 0} unclaimed items
               </Typography>
             </Box>
           </>

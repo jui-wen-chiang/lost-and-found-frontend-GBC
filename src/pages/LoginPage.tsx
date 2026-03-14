@@ -1,16 +1,13 @@
 import { useState } from 'react'
-import { Link as RouterLink, useNavigate } from 'react-router-dom'
+import { Link as RouterLink, useNavigate, useLocation } from 'react-router-dom'
 import {
+  Alert,
   Box,
   Button,
+  CircularProgress,
   Container,
-  FormControl,
-  FormHelperText,
-  InputLabel,
   Link,
-  MenuItem,
   Paper,
-  Select,
   Stack,
   TextField,
   Typography,
@@ -21,12 +18,16 @@ const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 function LoginPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { login } = useAuth()
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [role, setRole] = useState('student')
   const [touched, setTouched] = useState({ email: false, password: false })
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState('')
+
+  const from = (location.state as { from?: string })?.from ?? '/'
 
   const emailError = (() => {
     if (!touched.email) return ''
@@ -41,14 +42,26 @@ function LoginPage() {
     return ''
   })()
 
-  const canSubmit = email.trim() && emailRegex.test(email.trim()) && password
+  const canSubmit = email.trim() && emailRegex.test(email.trim()) && password && !submitting
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setSubmitError('')
     setTouched({ email: true, password: true })
     if (!canSubmit) return
-    login({ email: email.trim().toLowerCase(), role })
-    navigate('/')
+
+    setSubmitting(true)
+    try {
+      await login({ email: email.trim().toLowerCase(), password })
+      navigate(from, { replace: true })
+    } catch (err: unknown) {
+      const message =
+        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ??
+        'Invalid email or password.'
+      setSubmitError(message)
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -57,6 +70,12 @@ function LoginPage() {
         <Typography variant="h5" fontWeight={700} gutterBottom>
           Login
         </Typography>
+
+        {submitError && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {submitError}
+          </Alert>
+        )}
 
         <Box component="form" onSubmit={onSubmit} noValidate>
           <Stack spacing={2.5}>
@@ -84,27 +103,15 @@ function LoginPage() {
               fullWidth
             />
 
-            <FormControl fullWidth>
-              <InputLabel>Login as (demo)</InputLabel>
-              <Select
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-                label="Login as (demo)"
-              >
-                <MenuItem value="student">Student</MenuItem>
-                <MenuItem value="admin">Admin</MenuItem>
-              </Select>
-              <FormHelperText>Demo only — backend decides roles in production.</FormHelperText>
-            </FormControl>
-
             <Button
               type="submit"
               variant="contained"
               size="large"
               fullWidth
               disabled={!canSubmit}
+              startIcon={submitting ? <CircularProgress size={20} color="inherit" /> : undefined}
             >
-              Login
+              {submitting ? 'Logging in…' : 'Login'}
             </Button>
 
             <Typography variant="body2" textAlign="center">

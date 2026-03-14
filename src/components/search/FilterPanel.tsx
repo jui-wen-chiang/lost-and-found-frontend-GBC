@@ -18,8 +18,9 @@ import {
   Typography,
 } from '@mui/material'
 
-import { CATEGORIES, LOCATIONS } from '../items/ItemPostForm'
 import { Filters } from 'src/types/item'
+import { useCategories } from '../../hooks/useCategories'
+import { useLocations } from '../../hooks/useLocations'
 
 interface Props {
   open: boolean
@@ -28,6 +29,9 @@ interface Props {
 }
 
 function FilterPanel({ open, filters, onChange }: Props) {
+  const { data: categories = [] } = useCategories()
+  const { data: locations = [] } = useLocations()
+
   const update = (key: keyof Filters, value: unknown) => onChange({ ...filters, [key]: value })
 
   const toggleCategory = (catId: number) => {
@@ -38,7 +42,7 @@ function FilterPanel({ open, filters, onChange }: Props) {
     update('categories', next)
   }
 
-  const activeCampuses = [...new Set(LOCATIONS.map((l) => l.campus_name))]
+  const activeCampuses = [...new Set(locations.map((l) => l.campus).filter(Boolean) as string[])]
 
   return (
     <Collapse in={open}>
@@ -125,11 +129,11 @@ function FilterPanel({ open, filters, onChange }: Props) {
                   label="Location"
                 >
                   <MenuItem value="">All Locations</MenuItem>
-                  {LOCATIONS.filter(
-                    (l) => !filters.campus || l.campus_name === filters.campus
+                  {locations.filter(
+                    (l) => !filters.campus || l.campus === filters.campus
                   ).map((l) => (
                     <MenuItem key={l.id} value={l.id}>
-                      {l.building} — {l.room_area}
+                      {l.name}
                     </MenuItem>
                   ))}
                 </Select>
@@ -143,7 +147,7 @@ function FilterPanel({ open, filters, onChange }: Props) {
               Categories
             </FormLabel>
             <FormGroup row sx={{ gap: 0 }}>
-              {CATEGORIES.map((cat) => (
+              {categories.map((cat) => (
                 <FormControlLabel
                   key={cat.id}
                   label={<Typography variant="body2">{cat.name}</Typography>}
@@ -162,13 +166,23 @@ function FilterPanel({ open, filters, onChange }: Props) {
         </Grid>
 
         {/* Active filter chips */}
-        <ActiveFilterChips filters={filters} onChange={onChange} />
+        <ActiveFilterChips filters={filters} onChange={onChange} categories={categories} locations={locations} />
       </Box>
     </Collapse>
   )
 }
 
-function ActiveFilterChips({ filters, onChange }: { filters: Filters; onChange: (f: Filters) => void }) {
+function ActiveFilterChips({
+  filters,
+  onChange,
+  categories,
+  locations,
+}: {
+  filters: Filters
+  onChange: (f: Filters) => void
+  categories: { id: number; name: string }[]
+  locations: { id: number; name: string; campus: string | null }[]
+}) {
   const chips = []
 
   if (filters.type && filters.type !== 'all') {
@@ -181,10 +195,10 @@ function ActiveFilterChips({ filters, onChange }: { filters: Filters; onChange: 
     chips.push({ label: filters.campus, clear: () => onChange({ ...filters, campus: '' }) })
   }
   if (filters.locationId) {
-    const loc = LOCATIONS.find((l) => l.id === filters.locationId)
+    const loc = locations.find((l) => l.id === filters.locationId)
     if (loc) {
       chips.push({
-        label: `${loc.building} — ${loc.room_area}`,
+        label: loc.name,
         clear: () => onChange({ ...filters, locationId: '' }),
       })
     }
@@ -202,7 +216,7 @@ function ActiveFilterChips({ filters, onChange }: { filters: Filters; onChange: 
     })
   }
   ;(filters.categories || []).forEach((catId: number) => {
-    const cat = CATEGORIES.find((c) => c.id === catId)
+    const cat = categories.find((c) => c.id === catId)
     if (cat) {
       chips.push({
         label: cat.name,
