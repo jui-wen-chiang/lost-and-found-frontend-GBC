@@ -18,10 +18,17 @@ import AppointmentConfirmationPage from './pages/AppointmentConfirmationPage'
 import AdminAuditQueuePage from './pages/AdminAuditQueuePage'
 import AdminAuditDetailPage from './pages/AdminAuditDetailPage'
 
-// ✅ Added for Personal Dashboard (Person C - FR-7)
+// Personal Dashboard
 import DashboardHomePage from './pages/DashboardHomePage'
 import MyLostReportsPage from './pages/MyLostReportsPage'
 import MyFoundReportsPage from './pages/MyFoundReportsPage'
+
+// Admin
+import AdminDashboardPage from './pages/admin/AdminDashboardPage'
+import AdminAppointmentsPage from './pages/admin/AdminAppointmentsPage'
+import ReportsPage from './pages/admin/ReportsPage'
+import IamPage from './pages/admin/IamPage'
+import PostVerificationPage from './pages/admin/PostVerificationPage'
 
 function App() {
   return (
@@ -45,8 +52,15 @@ function App() {
         <Route path="/claims/new/:itemId" element={<ClaimRequestPage />} />
         <Route path="/appointments/schedule/:itemId" element={<AppointmentSchedulerPage />} />
         <Route path="/appointments/confirm" element={<AppointmentConfirmationPage />} />
+
+        {/* Admin routes */}
+        <Route path="/admin" element={<AdminDashboardPage />} />
         <Route path="/admin/audit" element={<AdminAuditQueuePage />} />
         <Route path="/admin/audit/:id" element={<AdminAuditDetailPage />} />
+        <Route path="/admin/appointments" element={<AdminAppointmentsPage />} />
+        <Route path="/admin/reports" element={<ReportsPage />} />
+        <Route path="/admin/iam" element={<IamPage />} />
+        <Route path="/admin/verify" element={<PostVerificationPage />} />
       </Routes>
     </BrowserRouter>
   )
