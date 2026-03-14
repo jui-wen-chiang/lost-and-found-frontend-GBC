@@ -1,44 +1,49 @@
-import * as React from 'react';
-// theme
-import { ThemeProvider } from "@mui/material/styles";
-import { CssBaseline } from '@mui/material';
-import theme from './theme/index';
-// views & Router
-import { BrowserRouter as Router } from "react-router-dom";
-// import Appbar from './components/tools/Bars/MyAppBar.tsx';
-import TestView from "src/views/TestView";
-// style
-import { Container, Box } from "src/components/mui/components";
-import "slick-carousel/slick/slick.css";
-import "slick-carousel/slick/slick-theme.css";
-import '@xyflow/react/dist/style.css';
-import { useState, useEffect } from 'react';
-//import { displayPartsToString } from 'typescript';
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import NavBar from './components/NavBar'
 
-// Use basename only in production. Please do not delete yet.
-// const basename = import.meta.env.PROD ? '/lost-and-found-gbc' : '/';
+import LoginPage from './pages/LoginPage'
+import RegisterPage from './pages/RegisterPage'
+import HomePage from './pages/HomePage'
+import ItemDetailPage from './pages/ItemDetailPage'
+import ReportItemPage from './pages/ReportItemPage'
+import MyPostsPage from './pages/MyPostsPage'
+import EditPostPage from './pages/EditPostPage'
+import AppointmentsPage from './pages/AppointmentsPage'
+import CouponsPage from './pages/CouponsPage'
+import UserDashboardPage from './pages/UserDashboardPage'
+import ClaimRequestPage from './pages/ClaimRequestPage'
+import MyClaimsPage from './pages/MyClaimsPage'
+import AppointmentSchedulerPage from './pages/AppointmentSchedulerPage'
+import AppointmentConfirmationPage from './pages/AppointmentConfirmationPage'
+import AdminAuditQueuePage from './pages/AdminAuditQueuePage'
+import AdminAuditDetailPage from './pages/AdminAuditDetailPage'
 
-function AppLayout() {
-    return (
-        <Container>
-            {/* <Box>
-                <Appbar />
-            </Box> */}
-            <Box>
-                <TestView />
-            </Box>
-        </Container>
-    );
+function App() {
+  return (
+    <BrowserRouter>
+      <NavBar />
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+
+        
+        <Route path="/" element={<HomePage />} />
+        <Route path="/items/new" element={<ReportItemPage />} />
+        <Route path="/items/:id" element={<ItemDetailPage />} />
+        <Route path="/my-posts" element={<MyPostsPage />} />
+        <Route path="/my-posts/:id/edit" element={<EditPostPage />} />
+        <Route path="/dashboard" element={<UserDashboardPage />} />
+        <Route path="/appointments" element={<AppointmentsPage />} />
+        <Route path="/coupons" element={<CouponsPage />} />
+        <Route path="/claims" element={<MyClaimsPage />} />
+        <Route path="/claims/new/:itemId" element={<ClaimRequestPage />} />
+        <Route path="/appointments/schedule/:itemId" element={<AppointmentSchedulerPage />} />
+        <Route path="/appointments/confirm" element={<AppointmentConfirmationPage />} />
+        <Route path="/admin/audit" element={<AdminAuditQueuePage />} />
+        <Route path="/admin/audit/:id" element={<AdminAuditDetailPage />} />
+      </Routes>
+    </BrowserRouter>
+  )
 }
 
-export default function App() {
-    return (
-        <ThemeProvider theme={theme} >
-            <CssBaseline />
-            {/* <Router basename={basename}></Router> */}
-            <Router>
-                <AppLayout />
-            </Router>
-        </ThemeProvider>
-    );
-}
+export default App

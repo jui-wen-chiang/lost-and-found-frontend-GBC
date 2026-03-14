@@ -20,6 +20,7 @@ function NavBar() {
   const baseLinks = [{ label: 'Home', to: '/' }]
 
   const userLinks = [
+    { label: 'Dashboard', to: '/dashboard' },
     { label: 'Report Item', to: '/items/new' },
     { label: 'My Posts', to: '/my-posts' },
     { label: 'Appointments', to: '/appointments' },
