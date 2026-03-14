@@ -1,5 +1,17 @@
 import { useMemo, useState } from 'react'
-import { Box, Container, Grid, IconButton, Stack, Tooltip, Typography } from '@mui/material'
+import {
+  Alert,
+  AlertTitle,
+  Box,
+  Button,
+  CircularProgress,
+  Container,
+  Grid,
+  IconButton,
+  Stack,
+  Tooltip,
+  Typography,
+} from '@mui/material'
 import ViewModuleIcon from '@mui/icons-material/ViewModule'
 import ViewListIcon from '@mui/icons-material/ViewList'
 
@@ -8,95 +20,11 @@ import FilterPanel from '../components/search/FilterPanel'
 import SortOptions from '../components/search/SortOptions'
 import ItemCard from '../components/items/ItemCard'
 import ItemList from '../components/items/ItemList'
-import { Item, Filters } from 'src/types/item'
-
-// ─── Mock data (replace with API call) ───────────────────────────────────────
-const MOCK_ITEMS = [
-  {
-    id: 1,
-    type: 'lost',
-    title: 'Blue Backpack',
-    category_id: 6,
-    category: 'Bags',
-    description: 'Navy blue Jansport backpack with a red keychain. Last seen near the library.',
-    location_id: 3,
-    location: 'St. James — Building A, Library',
-    campus: 'St. James',
-    date_lost_found: '2026-02-10',
-    status: 'approved',
-    photos: [],
-  },
-  {
-    id: 2,
-    type: 'found',
-    title: 'AirPods Case',
-    category_id: 1,
-    category: 'Electronics',
-    description: 'White AirPods Pro case found on a bench, no AirPods inside.',
-    location_id: 1,
-    location: 'Casa Loma — Building A, Lobby',
-    campus: 'Casa Loma',
-    date_lost_found: '2026-02-14',
-    status: 'approved',
-    photos: [],
-  },
-  {
-    id: 3,
-    type: 'lost',
-    title: 'Student ID Card',
-    category_id: 4,
-    category: 'Books & Documents',
-    description: 'GBC student ID card. Name: Alex Johnson.',
-    location_id: 2,
-    location: 'Casa Loma — Building B, Cafeteria',
-    campus: 'Casa Loma',
-    date_lost_found: '2026-02-15',
-    status: 'approved',
-    photos: [],
-  },
-  {
-    id: 4,
-    type: 'found',
-    title: 'Black Umbrella',
-    category_id: 7,
-    category: 'Other',
-    description: 'Compact black umbrella left in Room 204.',
-    location_id: 5,
-    location: 'Waterfront — Building A, Main Hall',
-    campus: 'Waterfront',
-    date_lost_found: '2026-02-18',
-    status: 'approved',
-    photos: [],
-  },
-  {
-    id: 5,
-    type: 'lost',
-    title: 'Silver MacBook Charger',
-    category_id: 1,
-    category: 'Electronics',
-    description: '65W USB-C MacBook charger with GBC sticker on the brick.',
-    location_id: 4,
-    location: 'St. James — Building B, Gym',
-    campus: 'St. James',
-    date_lost_found: '2026-02-20',
-    status: 'pending',
-    photos: [],
-  },
-  {
-    id: 6,
-    type: 'found',
-    title: 'Pair of Keys',
-    category_id: 5,
-    category: 'Keys',
-    description: 'Found a set of keys with a Superman keychain near the entrance.',
-    location_id: 1,
-    location: 'Casa Loma — Building A, Lobby',
-    campus: 'Casa Loma',
-    date_lost_found: '2026-02-22',
-    status: 'approved',
-    photos: [],
-  },
-]
+import { Item, Filters, apiItemToItem } from 'src/types/item'
+import { useItems } from '../hooks/useItems'
+import { useCategories } from '../hooks/useCategories'
+import { useLocations } from '../hooks/useLocations'
+import { getErrorMessage, isAuthError } from '../utils/errorMessages'
 
 const EMPTY_FILTERS: Filters = {
   type: 'all',
@@ -169,7 +97,6 @@ function applyFiltersAndSort(items: Item[], query: string, filters: Filters, sor
   } else if (sort === 'oldest') {
     result.sort((a, b) => a.date_lost_found.localeCompare(b.date_lost_found))
   } else if (sort === 'relevant' && query.trim()) {
-    // Simple relevance: title match ranks higher
     const q = query.toLowerCase()
     result.sort((a, b) => {
       const aTitle = a.title?.toLowerCase().includes(q) ? 0 : 1
@@ -190,9 +117,18 @@ function HomePage() {
   const [sort, setSort] = useState('latest')
   const [viewMode, setViewMode] = useState('grid') // 'grid' | 'list'
 
+  const { data: apiItems, isLoading: itemsLoading, error: itemsError } = useItems()
+  const { data: categories = [] } = useCategories()
+  const { data: locations = [] } = useLocations()
+
+  const items: Item[] = useMemo(
+    () => (apiItems ?? []).map((ai) => apiItemToItem(ai, categories, locations)),
+    [apiItems, categories, locations]
+  )
+
   const results = useMemo(
-    () => applyFiltersAndSort(MOCK_ITEMS, query, filters, sort),
-    [query, filters, sort]
+    () => applyFiltersAndSort(items, query, filters, sort),
+    [items, query, filters, sort]
   )
 
   const activeFilterCount = countActiveFilters(filters)
@@ -257,8 +193,19 @@ function HomePage() {
         </Stack>
       </Box>
 
-      {/* Results */}
-      {results.length === 0 ? (
+      {/* Loading / Error / Results */}
+      {itemsLoading ? (
+        <Box sx={{ textAlign: 'center', py: 8 }}>
+          <CircularProgress />
+        </Box>
+      ) : itemsError ? (
+        <Alert severity={isAuthError(itemsError) ? 'info' : 'error'} sx={{ mt: 2 }}
+          action={isAuthError(itemsError) ? <Button color="inherit" size="small" href="/login">Sign In</Button> : undefined}
+        >
+          <AlertTitle>{isAuthError(itemsError) ? 'Sign in required' : 'Error'}</AlertTitle>
+          {getErrorMessage(itemsError, 'Failed to load items.')}
+        </Alert>
+      ) : results.length === 0 ? (
         <Box sx={{ textAlign: 'center', py: 8 }}>
           <Typography variant="h6" color="text.secondary">
             No items match your search.

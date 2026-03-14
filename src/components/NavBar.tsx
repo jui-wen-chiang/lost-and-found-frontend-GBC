@@ -53,7 +53,7 @@ const ADMIN_MENU_ITEMS = [
 // ─── NavBar ───────────────────────────────────────────────────────────────────
 
 function NavBar() {
-  const { isAuthenticated, role, user, logout } = useAuth()
+  const { isAuthenticated, isAdmin, user, logout } = useAuth()
   const navigate = useNavigate()
 
   // Mobile drawer
@@ -63,16 +63,15 @@ function NavBar() {
   // User avatar menu
   const [userAnchor, setUserAnchor] = useState<null | HTMLElement>(null)
 
-  const isAdmin = role === 'admin'
   const navLinks = isAuthenticated ? USER_LINKS : GUEST_LINKS
   const allDrawerLinks = [
     ...navLinks,
     ...(isAdmin ? ADMIN_MENU_ITEMS : []),
   ]
 
-  function handleLogout() {
+  async function handleLogout() {
     setUserAnchor(null)
-    logout()
+    await logout()
     navigate('/login')
   }
 
@@ -165,7 +164,7 @@ function NavBar() {
               >
                 <Box sx={{ px: 2, py: 1.5 }}>
                   <Typography variant="body2" fontWeight={600} noWrap>{user?.email}</Typography>
-                  <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'capitalize' }}>{role}</Typography>
+                  <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'capitalize' }}>{user?.role}</Typography>
                 </Box>
                 <Divider />
                 <MenuItem onClick={handleLogout} dense>

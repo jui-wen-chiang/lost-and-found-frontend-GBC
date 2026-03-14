@@ -11,7 +11,8 @@ import CloseIcon from '@mui/icons-material/Close'
 import { Photo } from 'src/types/item'
 
 const MAX_FILES = 5
-const MAX_SIZE_MB = 5
+const MAX_SIZE_MB = 1
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 
 interface Props {
   photos?: Photo[]
@@ -40,8 +41,8 @@ function PhotoUpload({ photos = [], onChange, maxFiles = MAX_FILES }: Props) {
     Array.from(fileList)
       .slice(0, remaining)
       .forEach((file) => {
-        if (!file.type.startsWith('image/')) {
-          setError('Only image files are allowed.')
+        if (!ALLOWED_TYPES.includes(file.type)) {
+          setError('Only JPG, PNG, and WEBP files are allowed.')
           return
         }
         if (file.size > MAX_SIZE_MB * 1024 * 1024) {
@@ -115,7 +116,7 @@ function PhotoUpload({ photos = [], onChange, maxFiles = MAX_FILES }: Props) {
         <input
           ref={inputRef}
           type="file"
-          accept="image/*"
+          accept=".jpg,.jpeg,.png,.webp"
           multiple
           hidden
           onChange={handleInputChange}

@@ -1,10 +1,13 @@
 import { useState, ReactNode } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Photo } from 'src/types/item'
+import { apiItemToItem } from 'src/types/item'
 import {
+  Alert,
   Box,
   Button,
   Chip,
+  CircularProgress,
   Container,
   Divider,
   Grid,
@@ -24,122 +27,12 @@ import ImageNotSupportedIcon from '@mui/icons-material/ImageNotSupported'
 import QRCodeDisplay from 'src/components/QRCodeDisplay'
 import ItemStatusTimeline from 'src/components/items/ItemStatusTimeline'
 import { isExpired, daysOld } from 'src/utils/itemUtils'
+import { useItem } from '../hooks/useItems'
+import { useCategories } from '../hooks/useCategories'
+import { useLocations } from '../hooks/useLocations'
+import { getErrorMessage, isAuthError } from '../utils/errorMessages'
 
 import WarningAmberIcon from '@mui/icons-material/WarningAmber'
-
-// ─── Mock data – replace with API fetch by id ─────────────────────────────────
-const MOCK_ITEMS = [
-  {
-    id: 1,
-    type: 'lost',
-    title: 'Blue Backpack',
-    category: 'Bags',
-    description:
-      'Navy blue Jansport backpack with a red keychain. Last seen near the library around 3 PM. Contains a laptop, notebooks, and a water bottle. The laptop has a Mario sticker on the lid.',
-    location: 'St. James — Building A, Library',
-    campus: 'St. James',
-    date_lost_found: '2026-02-10',
-    status: 'approved',
-    posted_by: 'student@georgebrown.ca',
-    photos: [],
-  },
-  {
-    id: 2,
-    type: 'found',
-    title: 'AirPods Case',
-    category: 'Electronics',
-    description:
-      'White AirPods Pro case found on a bench outside the main entrance. No AirPods inside the case. Has a small scratch on the lid.',
-    location: 'Casa Loma — Building A, Lobby',
-    campus: 'Casa Loma',
-    date_lost_found: '2026-02-14',
-    status: 'approved',
-    posted_by: 'finder@georgebrown.ca',
-    photos: [],
-  },
-  {
-    id: 3,
-    type: 'lost',
-    title: 'Student ID Card',
-    category: 'Books & Documents',
-    description: 'GBC student ID card. Name: Alex Johnson. Student number visible on the front.',
-    location: 'Casa Loma — Building B, Cafeteria',
-    campus: 'Casa Loma',
-    date_lost_found: '2026-02-15',
-    status: 'approved',
-    posted_by: 'alex.johnson@georgebrown.ca',
-    photos: [],
-  },
-  {
-    id: 4,
-    type: 'found',
-    title: 'Black Umbrella',
-    category: 'Other',
-    description: 'Compact black umbrella left in Room 204. Auto-open style with a wrist strap.',
-    location: 'Waterfront — Building A, Main Hall',
-    campus: 'Waterfront',
-    date_lost_found: '2026-02-18',
-    status: 'approved',
-    posted_by: 'staff@georgebrown.ca',
-    photos: [],
-  },
-  {
-    id: 5,
-    type: 'lost',
-    title: 'Silver MacBook Charger',
-    category: 'Electronics',
-    description:
-      '65W USB-C MacBook charger with a GBC sticker on the power brick. USB-C cable included.',
-    location: 'St. James — Building B, Gym',
-    campus: 'St. James',
-    date_lost_found: '2026-02-20',
-    status: 'pending',
-    posted_by: 'mac.user@georgebrown.ca',
-    photos: [],
-  },
-  {
-    id: 6,
-    type: 'found',
-    title: 'Pair of Keys',
-    category: 'Keys',
-    description:
-      'Found a set of keys with a Superman keychain near the main entrance. Includes 3 keys and a bus pass.',
-    location: 'Casa Loma — Building A, Lobby',
-    campus: 'Casa Loma',
-    date_lost_found: '2026-02-22',
-    status: 'approved',
-    posted_by: 'finder2@georgebrown.ca',
-    photos: [],
-  },
-  {
-    id: 7,
-    type: 'found',
-    title: 'Water Bottle (Hydro Flask)',
-    category: 'Other',
-    description:
-      'Black 32oz Hydro Flask found in the cafeteria. Has stickers on the side. Unclaimed for over 30 days.',
-    location: 'St. James — Building A, Cafeteria',
-    campus: 'St. James',
-    date_lost_found: '2025-12-01',
-    status: 'expired',
-    posted_by: 'staff@georgebrown.ca',
-    photos: [],
-  },
-  {
-    id: 8,
-    type: 'lost',
-    title: 'Red Scarf',
-    category: 'Clothing & Accessories',
-    description:
-      'Wool red scarf, returned to the owner. Resolved and closed.',
-    location: 'Waterfront — Building B, Hallway',
-    campus: 'Waterfront',
-    date_lost_found: '2026-01-20',
-    status: 'resolved',
-    posted_by: 'student2@georgebrown.ca',
-    photos: [],
-  },
-]
 
 const TYPE_COLOR: Record<string, 'error' | 'success'> = { lost: 'error', found: 'success' }
 const STATUS_COLOR: Record<string, 'warning' | 'success' | 'default' | 'error'> = {
@@ -312,21 +205,41 @@ function DetailRow({ icon, label, value }: { icon: ReactNode; label: string; val
 function ItemDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const numId = Number(id)
 
-  const item = MOCK_ITEMS.find((i) => String(i.id) === String(id))
+  const { data: apiItem, isLoading, error } = useItem(numId)
+  const { data: categories = [] } = useCategories()
+  const { data: locations = [] } = useLocations()
 
-  if (!item) {
+  if (isLoading) {
+    return (
+      <Container maxWidth="md" sx={{ py: 8, textAlign: 'center' }}>
+        <CircularProgress />
+      </Container>
+    )
+  }
+
+  if (error || !apiItem) {
     return (
       <Container maxWidth="md" sx={{ py: 8, textAlign: 'center' }}>
         <Typography variant="h5" gutterBottom>
           Item not found
         </Typography>
+        {error && (
+          <Alert severity={isAuthError(error) ? 'info' : 'error'} sx={{ mb: 2, mx: 'auto', maxWidth: 400 }}
+            action={isAuthError(error) ? <Button color="inherit" size="small" href="/login">Sign In</Button> : undefined}
+          >
+            {getErrorMessage(error)}
+          </Alert>
+        )}
         <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/')}>
           Back to Browse
         </Button>
       </Container>
     )
   }
+
+  const item = apiItemToItem(apiItem, categories, locations)
 
   const expired = isExpired(item)
 
@@ -338,7 +251,7 @@ function ItemDetailPage() {
       </Button>
 
       {/* ── Full-width gallery ── */}
-      <ImageGallery photos={item.photos} />
+      <ImageGallery photos={item.photos ?? []} />
 
       {/* ── Content: title+description left, details+CTA right ── */}
       <Grid container spacing={4} sx={{ mt: 1 }}>

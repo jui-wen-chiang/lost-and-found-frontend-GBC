@@ -16,24 +16,8 @@ import {
 } from '@mui/material'
 import PhotoUpload from './PhotoUpload'
 import { FormValues, Photo } from 'src/types/item'
-
-export const CATEGORIES = [
-  { id: 1, name: 'Electronics' },
-  { id: 2, name: 'Clothing' },
-  { id: 3, name: 'Accessories' },
-  { id: 4, name: 'Books & Documents' },
-  { id: 5, name: 'Keys' },
-  { id: 6, name: 'Bags' },
-  { id: 7, name: 'Other' },
-]
-
-export const LOCATIONS = [
-  { id: 1, campus_name: 'Casa Loma', building: 'Building A', room_area: 'Lobby' },
-  { id: 2, campus_name: 'Casa Loma', building: 'Building B', room_area: 'Cafeteria' },
-  { id: 3, campus_name: 'St. James', building: 'Building A', room_area: 'Library' },
-  { id: 4, campus_name: 'St. James', building: 'Building B', room_area: 'Gym' },
-  { id: 5, campus_name: 'Waterfront', building: 'Building A', room_area: 'Main Hall' },
-]
+import { useCategories } from '../../hooks/useCategories'
+import { useLocations } from '../../hooks/useLocations'
 
 const EMPTY_FORM: FormValues = {
   type: 'lost',
@@ -54,6 +38,8 @@ interface Props {
 
 function ItemPostForm({ initialValues = {}, onSubmit, onCancel, submitLabel = 'Submit' }: Props) {
   const [form, setForm] = useState<FormValues>({ ...EMPTY_FORM, ...initialValues })
+  const { data: categories = [] } = useCategories()
+  const { data: locations = [] } = useLocations()
 
   const handleChange = (field: keyof FormValues) => (e: { target: { value: unknown } }) => {
     setForm((prev) => ({ ...prev, [field]: e.target.value }))
@@ -89,7 +75,7 @@ function ItemPostForm({ initialValues = {}, onSubmit, onCancel, submitLabel = 'S
           onChange={handleChange('category_id')}
           label="Category"
         >
-          {CATEGORIES.map((c) => (
+          {categories.map((c) => (
             <MenuItem key={c.id} value={c.id}>
               {c.name}
             </MenuItem>
@@ -114,9 +100,9 @@ function ItemPostForm({ initialValues = {}, onSubmit, onCancel, submitLabel = 'S
           onChange={handleChange('location_id')}
           label="Location"
         >
-          {LOCATIONS.map((l) => (
+          {locations.map((l) => (
             <MenuItem key={l.id} value={l.id}>
-              {l.campus_name} — {l.building}, {l.room_area}
+              {l.name}
             </MenuItem>
           ))}
         </Select>

@@ -1,10 +1,13 @@
+import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
+  Alert,
   Box,
   Button,
   Card,
   CardContent,
   Chip,
+  CircularProgress,
   Container,
   Divider,
   Grid,
@@ -34,43 +37,11 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts'
-
-// ─── Mock data (replace with API calls when backend is ready) ─────────────────
-
-const STATS = [
-  { label: 'Total Items', value: 142, icon: <InventoryIcon />, color: '#1976d2' },
-  { label: 'Pending Audits', value: 8, icon: <PendingIcon />, color: '#ed6c02' },
-  { label: 'Pending Appointments', value: 5, icon: <CalendarIcon />, color: '#9c27b0' },
-  { label: 'Unclaimed Items', value: 34, icon: <WarningIcon />, color: '#d32f2f' },
-  { label: 'Resolved Today', value: 12, icon: <CheckCircleIcon />, color: '#2e7d32' },
-  { label: 'Active Reports', value: 27, icon: <TrendingUpIcon />, color: '#0288d1' },
-]
-
-const CATEGORY_DATA = [
-  { name: 'Electronics', count: 38 },
-  { name: 'Clothing', count: 25 },
-  { name: 'ID / Cards', count: 19 },
-  { name: 'Bags', count: 22 },
-  { name: 'Keys', count: 16 },
-  { name: 'Other', count: 22 },
-]
-
-const STATUS_DATA = [
-  { name: 'Lost', value: 58 },
-  { name: 'Found', value: 50 },
-  { name: 'Claimed', value: 21 },
-  { name: 'Returned', value: 13 },
-]
-
-const CAMPUS_DATA = [
-  { campus: 'Waterfront', lost: 24, found: 18 },
-  { campus: 'North', lost: 18, found: 15 },
-  { campus: 'Downtown', lost: 16, found: 17 },
-]
+import { useDashboardStats } from '../../hooks/useReports'
 
 const QUICK_ACTIONS = [
-  { label: 'Review Pending Audits', sublabel: '8 posts awaiting review', path: '/admin/audit', color: 'warning' as const },
-  { label: 'Manage Appointments', sublabel: '5 appointments pending', path: '/admin/appointments', color: 'secondary' as const },
+  { label: 'Review Pending Audits', sublabel: 'Posts awaiting review', path: '/admin/audit', color: 'warning' as const },
+  { label: 'Manage Appointments', sublabel: 'Pending appointments', path: '/admin/appointments', color: 'secondary' as const },
   { label: 'Unclaimed Report', sublabel: 'Export & filter unclaimed items', path: '/admin/reports', color: 'error' as const },
   { label: 'User Roles (IAM)', sublabel: 'Manage user permissions', path: '/admin/iam', color: 'primary' as const },
 ]
@@ -81,6 +52,51 @@ const STATUS_COLORS = ['#1976d2', '#2e7d32', '#9c27b0', '#ed6c02']
 
 function AdminDashboardPage() {
   const navigate = useNavigate()
+  const { data: stats, isLoading, error } = useDashboardStats()
+
+  const statCards = useMemo(() => {
+    if (!stats) return []
+    const statusMap = Object.fromEntries(stats.status.map((s) => [s.status, s.count]))
+    return [
+      { label: 'Total Items', value: stats.kpi.total_count, icon: <InventoryIcon />, color: '#1976d2' },
+      { label: 'Pending', value: statusMap['pending'] ?? 0, icon: <PendingIcon />, color: '#ed6c02' },
+      { label: 'Approved', value: statusMap['approved'] ?? 0, icon: <CheckCircleIcon />, color: '#2e7d32' },
+      { label: 'Claimed', value: statusMap['claimed'] ?? 0, icon: <CalendarIcon />, color: '#9c27b0' },
+      { label: 'Completed', value: statusMap['completed'] ?? 0, icon: <TrendingUpIcon />, color: '#0288d1' },
+      { label: 'Success Rate', value: `${stats.kpi.success_rate}%`, icon: <WarningIcon />, color: '#d32f2f' },
+    ]
+  }, [stats])
+
+  const categoryData = useMemo(
+    () => (stats?.category_comparison ?? []).map((c) => ({ name: c.category__name, count: c.lost_count + c.found_count })),
+    [stats],
+  )
+
+  const statusData = useMemo(
+    () => (stats?.status ?? []).map((s) => ({ name: s.status.charAt(0).toUpperCase() + s.status.slice(1), value: s.count })),
+    [stats],
+  )
+
+  const locationData = useMemo(
+    () => (stats?.location ?? []).map((l) => ({ name: l.location__name, count: l.count })),
+    [stats],
+  )
+
+  if (isLoading) {
+    return (
+      <Container maxWidth="xl" sx={{ py: 8, textAlign: 'center' }}>
+        <CircularProgress />
+      </Container>
+    )
+  }
+
+  if (error) {
+    return (
+      <Container maxWidth="xl" sx={{ py: 4 }}>
+        <Alert severity="error">Failed to load dashboard data.</Alert>
+      </Container>
+    )
+  }
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
@@ -97,7 +113,7 @@ function AdminDashboardPage() {
 
       {/* ── Stat Cards ── */}
       <Grid container spacing={2} mb={4}>
-        {STATS.map((stat) => (
+        {statCards.map((stat) => (
           <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }} key={stat.label}>
             <Paper
               elevation={0}
@@ -183,7 +199,7 @@ function AdminDashboardPage() {
               </Typography>
               <Divider sx={{ mb: 2 }} />
               <ResponsiveContainer width="100%" height={240}>
-                <BarChart data={CATEGORY_DATA} margin={{ top: 4, right: 16, bottom: 4, left: 0 }}>
+                <BarChart data={categoryData} margin={{ top: 4, right: 16, bottom: 4, left: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
                   <XAxis dataKey="name" tick={{ fontSize: 12 }} />
                   <YAxis tick={{ fontSize: 12 }} />
@@ -206,7 +222,7 @@ function AdminDashboardPage() {
               <ResponsiveContainer width="100%" height={240}>
                 <PieChart>
                   <Pie
-                    data={STATUS_DATA}
+                    data={statusData}
                     cx="50%"
                     cy="50%"
                     outerRadius={90}
@@ -214,7 +230,7 @@ function AdminDashboardPage() {
                     label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
                     labelLine={false}
                   >
-                    {STATUS_DATA.map((_, i) => (
+                    {statusData.map((_, i) => (
                       <Cell key={i} fill={STATUS_COLORS[i % STATUS_COLORS.length]} />
                     ))}
                   </Pie>
@@ -231,18 +247,16 @@ function AdminDashboardPage() {
           <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 3 }}>
             <CardContent>
               <Typography variant="subtitle1" fontWeight={700} gutterBottom>
-                Items by Campus
+                Items by Location
               </Typography>
               <Divider sx={{ mb: 2 }} />
               <ResponsiveContainer width="100%" height={240}>
-                <BarChart data={CAMPUS_DATA} margin={{ top: 4, right: 16, bottom: 4, left: 0 }}>
+                <BarChart data={locationData} margin={{ top: 4, right: 16, bottom: 4, left: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="campus" tick={{ fontSize: 12 }} />
+                  <XAxis dataKey="name" tick={{ fontSize: 12 }} />
                   <YAxis tick={{ fontSize: 12 }} />
                   <Tooltip />
-                  <Legend />
-                  <Bar dataKey="lost" fill="#d32f2f" radius={[4, 4, 0, 0]} name="Lost" />
-                  <Bar dataKey="found" fill="#2e7d32" radius={[4, 4, 0, 0]} name="Found" />
+                  <Bar dataKey="count" fill="#1976d2" radius={[4, 4, 0, 0]} name="Items" />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>

@@ -1,62 +1,43 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Box, Button, Container, Typography } from '@mui/material'
+import { Alert, Box, Button, CircularProgress, Container, Typography } from '@mui/material'
 
 import ItemList from '../components/items/ItemList'
 import DeleteItemDialog from '../components/items/DeleteItemDialog'
-import { Item } from 'src/types/item'
-
-const MOCK_ITEMS = [
-  {
-    id: 1,
-    type: 'lost',
-    title: 'Blue Backpack',
-    category_id: 6,
-    category: 'Bags',
-    description: 'Navy blue Jansport backpack with a red keychain. Last seen near the library.',
-    location_id: 3,
-    location: 'St. James — Building A, Library',
-    date_lost_found: '2026-02-10',
-    status: 'pending',
-  },
-  {
-    id: 2,
-    type: 'found',
-    title: 'AirPods Case',
-    category_id: 1,
-    category: 'Electronics',
-    description: 'White AirPods Pro case found on a bench, no AirPods inside.',
-    location_id: 1,
-    location: 'Casa Loma — Building A, Lobby',
-    date_lost_found: '2026-02-14',
-    status: 'approved',
-  },
-  {
-    id: 3,
-    type: 'lost',
-    title: 'Student ID Card',
-    category_id: 4,
-    category: 'Books & Documents',
-    description: 'GBC student ID card. Name: Alex Johnson.',
-    location_id: 2,
-    location: 'Casa Loma — Building B, Cafeteria',
-    date_lost_found: '2026-02-15',
-    status: 'approved',
-  },
-]
+import { Item, apiItemToItem } from 'src/types/item'
+import { useItems, useDeleteItem } from '../hooks/useItems'
+import { useCategories } from '../hooks/useCategories'
+import { useLocations } from '../hooks/useLocations'
+import { useAuth } from '../context/AuthContext'
+import { getErrorMessage, isAuthError } from '../utils/errorMessages'
 
 function MyPostsPage() {
   const navigate = useNavigate()
-  const [items, setItems] = useState(MOCK_ITEMS)
-  const [deleteItem, setDeleteItem] = useState<Item | null>(null)
+  const { user } = useAuth()
+
+  const { data: apiItems, isLoading, error } = useItems()
+  const { data: categories = [] } = useCategories()
+  const { data: locations = [] } = useLocations()
+  const deleteItemMutation = useDeleteItem()
+
+  const [deleteTarget, setDeleteTarget] = useState<Item | null>(null)
+
+  const items: Item[] = useMemo(() => {
+    if (!apiItems) return []
+    return apiItems
+      .filter((ai) => ai.owner === user?.id)
+      .map((ai) => apiItemToItem(ai, categories, locations))
+  }, [apiItems, categories, locations, user?.id])
 
   const handleEdit = (item: Item) => {
     navigate(`/my-posts/${item.id}/edit`, { state: { item } })
   }
 
   const handleDelete = () => {
-    setItems((prev) => prev.filter((i) => i.id !== deleteItem?.id))
-    setDeleteItem(null)
+    if (!deleteTarget) return
+    deleteItemMutation.mutate(deleteTarget.id, {
+      onSuccess: () => setDeleteTarget(null),
+    })
   }
 
   return (
@@ -68,17 +49,29 @@ function MyPostsPage() {
         </Button>
       </Box>
 
-      <ItemList
-        items={items}
-        onEdit={handleEdit}
-        onDelete={(item) => setDeleteItem(item)}
-      />
+      {isLoading ? (
+        <Box sx={{ textAlign: 'center', py: 6 }}>
+          <CircularProgress />
+        </Box>
+      ) : error ? (
+        <Alert severity={isAuthError(error) ? 'info' : 'error'}
+          action={isAuthError(error) ? <Button color="inherit" size="small" href="/login">Sign In</Button> : undefined}
+        >
+          {getErrorMessage(error, 'Failed to load your posts.')}
+        </Alert>
+      ) : (
+        <ItemList
+          items={items}
+          onEdit={handleEdit}
+          onDelete={(item) => setDeleteTarget(item)}
+        />
+      )}
 
       <DeleteItemDialog
-        open={!!deleteItem}
-        item={deleteItem}
+        open={!!deleteTarget}
+        item={deleteTarget}
         onConfirm={handleDelete}
-        onCancel={() => setDeleteItem(null)}
+        onCancel={() => setDeleteTarget(null)}
       />
     </Container>
   )
