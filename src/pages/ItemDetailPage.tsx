@@ -21,6 +21,7 @@ import CalendarTodayIcon from '@mui/icons-material/CalendarToday'
 import CategoryIcon from '@mui/icons-material/Category'
 import PersonIcon from '@mui/icons-material/Person'
 import ImageNotSupportedIcon from '@mui/icons-material/ImageNotSupported'
+import QRCodeDisplay from 'src/components/QRCodeDisplay'
 
 // ─── Mock data – replace with API fetch by id ─────────────────────────────────
 const MOCK_ITEMS = [
@@ -357,6 +358,15 @@ function ItemDetailPage() {
               )}
             </Stack>
           </Paper>
+
+          {/* QR Code — FR-10 */}
+          <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
+            <QRCodeDisplay
+              value={`${window.location.origin}/items/${item.id}`}
+              label={`Item #${item.id}`}
+              size={150}
+            />
+          </Box>
 
           {/* CTA */}
           <Box sx={{ mt: 2 }}>
