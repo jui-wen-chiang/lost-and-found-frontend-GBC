@@ -1,5 +1,14 @@
 import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import {
+  Alert,
+  Box,
+  Button,
+  Container,
+  Paper,
+  Stack,
+  Typography,
+} from "@mui/material";
 
 export default function AppointmentConfirmationPage() {
   const navigate = useNavigate();
@@ -10,114 +19,75 @@ export default function AppointmentConfirmationPage() {
 
   if (!appointment) {
     return (
-      <div style={{ padding: "24px" }}>
-        <h2>No appointment data found</h2>
-        <button
+      <Container sx={{ py: 3 }}>
+        <Typography variant="h5">No appointment data found</Typography>
+        <Button
+          variant="outlined"
+          sx={{ mt: 1.5 }}
           onClick={() => navigate("/appointments/schedule/12")}
-          style={{
-            marginTop: 12,
-            padding: "10px 14px",
-            borderRadius: 10,
-            border: "1px solid #ddd",
-            background: "#fff",
-            cursor: "pointer",
-          }}
         >
           Go to Scheduler
-        </button>
-      </div>
+        </Button>
+      </Container>
     );
   }
 
   return (
-    <div style={{ padding: "24px", maxWidth: "860px", margin: "0 auto" }}>
-      <h2 style={{ marginBottom: 8 }}>Appointment Confirmation</h2>
-      <p style={{ color: "#666" }}>
+    <Container maxWidth="md" sx={{ py: 3 }}>
+      <Typography variant="h5" sx={{ mb: 0.5 }}>
+        Appointment Confirmation
+      </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
         Review and manage your appointment details.
-      </p>
+      </Typography>
 
-      <div
-        style={{
-          background: "#fff",
-          borderRadius: 12,
-          padding: 20,
-          boxShadow: "0 2px 10px rgba(0,0,0,0.08)",
-          display: "grid",
-          gap: 14,
-        }}
-      >
+      <Paper sx={{ p: 3, borderRadius: 3 }}>
         {!cancelled ? (
-          <>
-            <div><strong>Item ID:</strong> {appointment.itemId || "N/A"}</div>
-            <div><strong>Date:</strong> {appointment.date}</div>
-            <div><strong>Time:</strong> {appointment.time}</div>
-            <div><strong>Location:</strong> {appointment.location}</div>
-            <div style={{ color: "#16a34a", fontWeight: 700 }}>
+          <Stack spacing={1.5}>
+            <Typography><strong>Item ID:</strong> {appointment.itemId || "N/A"}</Typography>
+            <Typography><strong>Date:</strong> {appointment.date}</Typography>
+            <Typography><strong>Time:</strong> {appointment.time}</Typography>
+            <Typography><strong>Location:</strong> {appointment.location}</Typography>
+            <Typography sx={{ color: "success.main", fontWeight: 700 }}>
               Status: Confirmed
-            </div>
+            </Typography>
 
-            <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-              <button
-                type="button"
+            <Stack direction="row" spacing={1.5} sx={{ pt: 1 }}>
+              <Button
+                variant="outlined"
                 onClick={() =>
                   navigate(`/appointments/schedule/${appointment.itemId || 12}`)
                 }
-                style={{
-                  padding: "10px 14px",
-                  borderRadius: 10,
-                  border: "1px solid #ddd",
-                  background: "#fff",
-                  cursor: "pointer",
-                  fontWeight: 700,
-                }}
               >
                 Modify Appointment
-              </button>
-
-              <button
-                type="button"
+              </Button>
+              <Button
+                variant="contained"
+                color="error"
                 onClick={() => setCancelled(true)}
-                style={{
-                  padding: "10px 14px",
-                  borderRadius: 10,
-                  border: "none",
-                  background: "#ef4444",
-                  color: "#fff",
-                  cursor: "pointer",
-                  fontWeight: 700,
-                }}
               >
                 Cancel Appointment
-              </button>
-            </div>
-          </>
+              </Button>
+            </Stack>
+          </Stack>
         ) : (
-          <>
-            <div style={{ color: "#ef4444", fontWeight: 700, fontSize: 18 }}>
-              Appointment Cancelled
-            </div>
-            <div>You can schedule a new appointment if needed.</div>
-
-            <button
-              type="button"
+          <Stack spacing={1.5}>
+            <Alert severity="error">Appointment Cancelled</Alert>
+            <Typography variant="body2">
+              You can schedule a new appointment if needed.
+            </Typography>
+            <Button
+              variant="outlined"
+              sx={{ width: "fit-content" }}
               onClick={() =>
                 navigate(`/appointments/schedule/${appointment.itemId || 12}`)
               }
-              style={{
-                width: "fit-content",
-                padding: "10px 14px",
-                borderRadius: 10,
-                border: "1px solid #ddd",
-                background: "#fff",
-                cursor: "pointer",
-                fontWeight: 700,
-              }}
             >
               Schedule Again
-            </button>
-          </>
+            </Button>
+          </Stack>
         )}
-      </div>
-    </div>
+      </Paper>
+    </Container>
   );
 }

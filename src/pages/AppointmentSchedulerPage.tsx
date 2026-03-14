@@ -1,5 +1,18 @@
 import React, { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import {
+  Alert,
+  Box,
+  Button,
+  Chip,
+  Container,
+  FormControl,
+  MenuItem,
+  Paper,
+  Select,
+  Stack,
+  Typography,
+} from "@mui/material";
 
 const mockSlots: Record<string, string[]> = {
   "2026-03-10": ["10:00 AM", "11:00 AM", "1:00 PM"],
@@ -33,105 +46,74 @@ export default function AppointmentSchedulerPage() {
   };
 
   return (
-    <div style={{ padding: "24px", maxWidth: "900px", margin: "0 auto" }}>
-      <h2 style={{ marginBottom: 8 }}>Schedule Appointment</h2>
-      <p style={{ color: "#666" }}>
+    <Container maxWidth="md" sx={{ py: 3 }}>
+      <Typography variant="h5" sx={{ mb: 0.5 }}>
+        Schedule Appointment
+      </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
         Choose a pickup time for item <strong>{itemId || "N/A"}</strong>.
-      </p>
+      </Typography>
 
-      <div
-        style={{
-          background: "#fff",
-          borderRadius: 12,
-          padding: 20,
-          boxShadow: "0 2px 10px rgba(0,0,0,0.08)",
-          display: "grid",
-          gap: 20,
-        }}
-      >
-        <div>
-          <label style={{ fontWeight: 700 }}>Select Date</label>
-          <select
-            value={selectedDate}
-            onChange={(e) => {
-              setSelectedDate(e.target.value);
-              setSelectedTime("");
-              setError("");
-            }}
-            style={{
-              display: "block",
-              marginTop: 8,
-              padding: 10,
-              borderRadius: 8,
-              border: "1px solid #ddd",
-              width: "100%",
-              maxWidth: 320,
-            }}
-          >
-            {dates.map((date) => (
-              <option key={date} value={date}>
-                {date}
-              </option>
-            ))}
-          </select>
-        </div>
+      <Paper sx={{ p: 3, borderRadius: 3 }}>
+        <Stack spacing={3}>
+          <Box>
+            <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>
+              Select Date
+            </Typography>
+            <FormControl size="small" sx={{ minWidth: 240 }}>
+              <Select
+                value={selectedDate}
+                onChange={(e) => {
+                  setSelectedDate(e.target.value);
+                  setSelectedTime("");
+                  setError("");
+                }}
+              >
+                {dates.map((date) => (
+                  <MenuItem key={date} value={date}>
+                    {date}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
 
-        <div>
-          <label style={{ fontWeight: 700 }}>Available Time Slots</label>
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: 12,
-              marginTop: 12,
-            }}
-          >
-            {mockSlots[selectedDate].map((slot) => {
-              const active = selectedTime === slot;
-              return (
-                <button
-                  key={slot}
-                  type="button"
-                  onClick={() => {
-                    setSelectedTime(slot);
-                    setError("");
-                  }}
-                  style={{
-                    padding: "10px 16px",
-                    borderRadius: 999,
-                    border: active ? "2px solid #2563eb" : "1px solid #ddd",
-                    background: active ? "#eff6ff" : "#fff",
-                    color: active ? "#2563eb" : "#111",
-                    fontWeight: 700,
-                    cursor: "pointer",
-                  }}
-                >
-                  {slot}
-                </button>
-              );
-            })}
-          </div>
-          {error && <div style={{ color: "#ef4444", marginTop: 10 }}>{error}</div>}
-        </div>
+          <Box>
+            <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>
+              Available Time Slots
+            </Typography>
+            <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
+              {mockSlots[selectedDate].map((slot) => {
+                const active = selectedTime === slot;
+                return (
+                  <Chip
+                    key={slot}
+                    label={slot}
+                    variant={active ? "filled" : "outlined"}
+                    color={active ? "primary" : "default"}
+                    onClick={() => {
+                      setSelectedTime(slot);
+                      setError("");
+                    }}
+                    sx={{ fontWeight: 700 }}
+                  />
+                );
+              })}
+            </Stack>
+            {error && (
+              <Alert severity="error" sx={{ mt: 1.5 }}>
+                {error}
+              </Alert>
+            )}
+          </Box>
 
-        <div>
-          <button
-            type="button"
-            onClick={handleContinue}
-            style={{
-              padding: "12px 18px",
-              borderRadius: 10,
-              border: "none",
-              background: "#111827",
-              color: "#fff",
-              fontWeight: 700,
-              cursor: "pointer",
-            }}
-          >
-            Continue
-          </button>
-        </div>
-      </div>
-    </div>
+          <Box>
+            <Button variant="contained" onClick={handleContinue}>
+              Continue
+            </Button>
+          </Box>
+        </Stack>
+      </Paper>
+    </Container>
   );
 }

@@ -1,26 +1,20 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link as RouterLink } from "react-router-dom";
+import {
+  Box,
+  Chip,
+  Container,
+  Link,
+  Paper,
+  Stack,
+  Typography,
+} from "@mui/material";
 
-function StatusTag({ status }: { status: string }) {
-  let color = "#f59e0b";
-  if (status === "Approved") color = "#16a34a";
-  if (status === "Rejected") color = "#ef4444";
-
-  return (
-    <span
-      style={{
-        padding: "4px 10px",
-        borderRadius: "999px",
-        background: `${color}15`,
-        color,
-        fontWeight: 700,
-        fontSize: "12px",
-      }}
-    >
-      {status}
-    </span>
-  );
-}
+const statusColorMap: Record<string, "warning" | "success" | "error"> = {
+  Pending: "warning",
+  Approved: "success",
+  Rejected: "error",
+};
 
 const mockClaims = [
   { id: 101, itemId: 12, title: "Wallet", status: "Pending" },
@@ -30,37 +24,48 @@ const mockClaims = [
 
 export default function MyClaimsPage() {
   return (
-    <div style={{ padding: "24px" }}>
-      <h2 style={{ marginBottom: 16 }}>My Claim Requests</h2>
+    <Container sx={{ py: 3 }}>
+      <Typography variant="h5" sx={{ mb: 2 }}>
+        My Claim Requests
+      </Typography>
 
-      <div style={{ display: "grid", gap: 12, maxWidth: 720 }}>
+      <Stack spacing={1.5} sx={{ maxWidth: 720 }}>
         {mockClaims.map((c) => (
-          <div
+          <Paper
             key={c.id}
-            style={{
-              background: "#fff",
-              borderRadius: 12,
-              padding: 16,
-              boxShadow: "0 2px 10px rgba(0,0,0,0.08)",
+            sx={{
+              p: 2,
+              borderRadius: 3,
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
             }}
           >
-            <div>
-              <div style={{ fontWeight: 800 }}>{c.title}</div>
-              <div style={{ color: "#666", fontSize: 14 }}>
-                Claim ID: {c.id} • Item ID: {c.itemId}
-              </div>
-              <div style={{ marginTop: 6 }}>
-                <Link to={`/claims/new/${c.itemId}`}>Open claim form</Link>
-              </div>
-            </div>
+            <Box>
+              <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+                {c.title}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Claim ID: {c.id} &bull; Item ID: {c.itemId}
+              </Typography>
+              <Link
+                component={RouterLink}
+                to={`/claims/new/${c.itemId}`}
+                variant="body2"
+                sx={{ mt: 0.5, display: "inline-block" }}
+              >
+                Open claim form
+              </Link>
+            </Box>
 
-            <StatusTag status={c.status} />
-          </div>
+            <Chip
+              label={c.status}
+              size="small"
+              color={statusColorMap[c.status] ?? "default"}
+            />
+          </Paper>
         ))}
-      </div>
-    </div>
+      </Stack>
+    </Container>
   );
 }

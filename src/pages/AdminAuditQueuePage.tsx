@@ -1,5 +1,12 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link as RouterLink } from "react-router-dom";
+import {
+  Button,
+  Container,
+  Paper,
+  Stack,
+  Typography,
+} from "@mui/material";
 
 const mockPendingPosts = [
   { id: 201, title: "Black Wallet", user: "John", date: "2026-03-01" },
@@ -9,34 +16,42 @@ const mockPendingPosts = [
 
 export default function AdminAuditQueuePage() {
   return (
-    <div style={{ padding: "24px" }}>
-      <h2 style={{ marginBottom: 16 }}>Admin Audit Queue</h2>
+    <Container sx={{ py: 3 }}>
+      <Typography variant="h5" sx={{ mb: 2 }}>
+        Admin Audit Queue
+      </Typography>
 
-      <div style={{ display: "grid", gap: 12, maxWidth: 900 }}>
+      <Stack spacing={1.5} sx={{ maxWidth: 900 }}>
         {mockPendingPosts.map((post) => (
-          <div
+          <Paper
             key={post.id}
-            style={{
-              background: "#fff",
-              borderRadius: 12,
-              padding: 16,
-              boxShadow: "0 2px 10px rgba(0,0,0,0.08)",
+            sx={{
+              p: 2,
+              borderRadius: 3,
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
             }}
           >
             <div>
-              <div style={{ fontWeight: 800 }}>{post.title}</div>
-              <div style={{ color: "#666", fontSize: 14 }}>
-                User: {post.user} • Date: {post.date}
-              </div>
+              <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+                {post.title}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                User: {post.user} &bull; Date: {post.date}
+              </Typography>
             </div>
 
-            <Link to={`/admin/audit/${post.id}`}>View Details</Link>
-          </div>
+            <Button
+              component={RouterLink}
+              to={`/admin/audit/${post.id}`}
+              size="small"
+            >
+              View Details
+            </Button>
+          </Paper>
         ))}
-      </div>
-    </div>
+      </Stack>
+    </Container>
   );
 }
