@@ -22,6 +22,10 @@ import CategoryIcon from '@mui/icons-material/Category'
 import PersonIcon from '@mui/icons-material/Person'
 import ImageNotSupportedIcon from '@mui/icons-material/ImageNotSupported'
 import QRCodeDisplay from 'src/components/QRCodeDisplay'
+import ItemStatusTimeline from 'src/components/items/ItemStatusTimeline'
+import { isExpired, daysOld } from 'src/utils/itemUtils'
+
+import WarningAmberIcon from '@mui/icons-material/WarningAmber'
 
 // ─── Mock data – replace with API fetch by id ─────────────────────────────────
 const MOCK_ITEMS = [
@@ -107,11 +111,49 @@ const MOCK_ITEMS = [
     posted_by: 'finder2@georgebrown.ca',
     photos: [],
   },
+  {
+    id: 7,
+    type: 'found',
+    title: 'Water Bottle (Hydro Flask)',
+    category: 'Other',
+    description:
+      'Black 32oz Hydro Flask found in the cafeteria. Has stickers on the side. Unclaimed for over 30 days.',
+    location: 'St. James — Building A, Cafeteria',
+    campus: 'St. James',
+    date_lost_found: '2025-12-01',
+    status: 'expired',
+    posted_by: 'staff@georgebrown.ca',
+    photos: [],
+  },
+  {
+    id: 8,
+    type: 'lost',
+    title: 'Red Scarf',
+    category: 'Clothing & Accessories',
+    description:
+      'Wool red scarf, returned to the owner. Resolved and closed.',
+    location: 'Waterfront — Building B, Hallway',
+    campus: 'Waterfront',
+    date_lost_found: '2026-01-20',
+    status: 'resolved',
+    posted_by: 'student2@georgebrown.ca',
+    photos: [],
+  },
 ]
 
 const TYPE_COLOR: Record<string, 'error' | 'success'> = { lost: 'error', found: 'success' }
-const STATUS_COLOR: Record<string, 'warning' | 'success' | 'default'> = { pending: 'warning', approved: 'success', resolved: 'default' }
-const STATUS_LABEL: Record<string, string> = { pending: 'Pending Review', approved: 'Active', resolved: 'Resolved' }
+const STATUS_COLOR: Record<string, 'warning' | 'success' | 'default' | 'error'> = {
+  pending: 'warning',
+  approved: 'success',
+  resolved: 'default',
+  expired: 'error',
+}
+const STATUS_LABEL: Record<string, string> = {
+  pending: 'Pending Review',
+  approved: 'Active',
+  resolved: 'Resolved',
+  expired: 'Expired',
+}
 
 // ─── Image Gallery (OLX/Avito style) ──────────────────────────────────────────
 
@@ -286,6 +328,8 @@ function ItemDetailPage() {
     )
   }
 
+  const expired = isExpired(item)
+
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       {/* Back button */}
@@ -317,6 +361,30 @@ function ItemDetailPage() {
             {item.title}
           </Typography>
 
+          {/* Expired banner */}
+          {expired && (
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                bgcolor: 'error.50',
+                border: '1px solid',
+                borderColor: 'error.light',
+                borderRadius: 2,
+                px: 2,
+                py: 1,
+                mb: 1,
+              }}
+            >
+              <WarningAmberIcon color="error" fontSize="small" />
+              <Typography variant="body2" color="error.dark" fontWeight={500}>
+                This item has been unclaimed for {daysOld(item.date_lost_found)} days and is now
+                expired. It may no longer be available for pickup.
+              </Typography>
+            </Box>
+          )}
+
           <Divider sx={{ my: 2 }} />
 
           <Typography variant="subtitle2" fontWeight={600} gutterBottom>
@@ -325,6 +393,9 @@ function ItemDetailPage() {
           <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', color: 'text.secondary' }}>
             {item.description || 'No description provided.'}
           </Typography>
+
+          {/* Status Timeline — FR: Item Status Timeline */}
+          <ItemStatusTimeline status={item.status} expired={expired} />
         </Grid>
 
         {/* Right column – details card + CTA */}

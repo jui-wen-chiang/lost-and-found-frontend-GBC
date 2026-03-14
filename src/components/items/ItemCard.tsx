@@ -12,16 +12,24 @@ import {
 import LocationOnIcon from '@mui/icons-material/LocationOn'
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday'
 import CategoryIcon from '@mui/icons-material/Category'
+import AccessTimeIcon from '@mui/icons-material/AccessTime'
 import { Item } from 'src/types/item'
+import { isExpired } from 'src/utils/itemUtils'
 
 const TYPE_COLOR: Record<string, 'error' | 'success' | 'default'> = { lost: 'error', found: 'success' }
-const STATUS_COLOR: Record<string, 'warning' | 'success' | 'default'> = { pending: 'warning', approved: 'success', resolved: 'default' }
+const STATUS_COLOR: Record<string, 'warning' | 'success' | 'default' | 'error'> = {
+  pending: 'warning',
+  approved: 'success',
+  resolved: 'default',
+  expired: 'error',
+}
 
 /**
  * ItemCard – grid card for a single lost/found item.
  */
 function ItemCard({ item }: { item: Item }) {
   const navigate = useNavigate()
+  const expired = isExpired(item)
 
   return (
     <Card
@@ -31,6 +39,9 @@ function ItemCard({ item }: { item: Item }) {
         flexDirection: 'column',
         borderRadius: 2,
         transition: 'box-shadow 0.2s',
+        opacity: expired ? 0.82 : 1,
+        border: expired ? '1.5px solid' : undefined,
+        borderColor: expired ? 'error.light' : undefined,
         '&:hover': { boxShadow: 6 },
       }}
     >
@@ -65,7 +76,7 @@ function ItemCard({ item }: { item: Item }) {
 
         <CardContent sx={{ flexGrow: 1, pb: 1.5 }}>
           {/* Type + status chips */}
-          <Stack direction="row" spacing={0.8} mb={1}>
+          <Stack direction="row" spacing={0.8} mb={1} flexWrap="wrap" useFlexGap>
             <Chip
               label={item.type?.toUpperCase()}
               color={TYPE_COLOR[item.type] || 'default'}
@@ -79,6 +90,15 @@ function ItemCard({ item }: { item: Item }) {
                 size="small"
                 variant="outlined"
                 sx={{ fontSize: 11 }}
+              />
+            )}
+            {expired && (
+              <Chip
+                icon={<AccessTimeIcon sx={{ fontSize: '13px !important' }} />}
+                label="Expired"
+                color="error"
+                size="small"
+                sx={{ fontWeight: 700, fontSize: 11 }}
               />
             )}
           </Stack>
