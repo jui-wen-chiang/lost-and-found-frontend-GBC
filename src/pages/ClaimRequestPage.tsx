@@ -1,26 +1,17 @@
 import React, { useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-
-function StatusTag({ status }: { status: string }) {
-  let color = "#f59e0b"; // Pending = orange
-  if (status === "Approved") color = "#16a34a";
-  if (status === "Rejected") color = "#ef4444";
-
-  return (
-    <span
-      style={{
-        padding: "4px 10px",
-        borderRadius: "999px",
-        background: `${color}15`,
-        color,
-        fontWeight: 700,
-        fontSize: "12px",
-      }}
-    >
-      {status}
-    </span>
-  );
-}
+import {
+  Alert,
+  Box,
+  Button,
+  Chip,
+  Container,
+  Grid,
+  Paper,
+  Stack,
+  TextField,
+  Typography,
+} from "@mui/material";
 
 export default function ClaimRequestPage() {
   const { itemId } = useParams();
@@ -72,21 +63,13 @@ export default function ClaimRequestPage() {
     setSubmitting(true);
 
     try {
-      // Mock submit (replace later with backend API call)
-      // Example payload:
-      // { itemId, ...form }
       console.log("Submitting claim request:", { itemId, ...form });
-
-      // Simulate request delay
       await new Promise((r) => setTimeout(r, 700));
 
       setResult({
         status: "Pending",
         message: "Claim request submitted. Status: Pending.",
       });
-
-      // Optional: navigate to My Claims after submit
-      // navigate("/claims");
     } catch (err) {
       console.error(err);
       setResult({
@@ -99,165 +82,124 @@ export default function ClaimRequestPage() {
   };
 
   return (
-    <div style={{ padding: "24px", maxWidth: 720, margin: "0 auto" }}>
-      <h2 style={{ marginBottom: 8 }}>Claim Request</h2>
-      <p style={{ marginTop: 0, color: "#555" }}>
+    <Container maxWidth="sm" sx={{ py: 3 }}>
+      <Typography variant="h5" sx={{ mb: 0.5 }}>
+        Claim Request
+      </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
         Item ID: <strong>{itemId}</strong>
-      </p>
+      </Typography>
 
-      <form
+      <Paper
+        component="form"
         onSubmit={onSubmit}
-        style={{
-          background: "#fff",
-          padding: 16,
-          borderRadius: 12,
-          boxShadow: "0 2px 10px rgba(0,0,0,0.08)",
-          display: "grid",
-          gap: 12,
-        }}
+        sx={{ p: 3, borderRadius: 3 }}
       >
-        <div>
-          <label style={{ fontWeight: 600 }}>Full Name *</label>
-          <input
+        <Stack spacing={2}>
+          <TextField
+            label="Full Name"
+            required
+            size="small"
             value={form.fullName}
             onChange={(e) => setField("fullName", e.target.value)}
-            placeholder="Your name"
-            style={{ width: "100%", padding: 10, marginTop: 6 }}
+            error={!!errors.fullName}
+            helperText={errors.fullName}
           />
-          {errors.fullName && (
-            <div style={{ color: "#ef4444", fontSize: 13 }}>{errors.fullName}</div>
-          )}
-        </div>
 
-        <div>
-          <label style={{ fontWeight: 600 }}>Student ID *</label>
-          <input
+          <TextField
+            label="Student ID"
+            required
+            size="small"
             value={form.studentId}
             onChange={(e) => setField("studentId", e.target.value)}
             placeholder="e.g., 101234567"
-            style={{ width: "100%", padding: 10, marginTop: 6 }}
+            error={!!errors.studentId}
+            helperText={errors.studentId}
           />
-          {errors.studentId && (
-            <div style={{ color: "#ef4444", fontSize: 13 }}>{errors.studentId}</div>
-          )}
-        </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          <div>
-            <label style={{ fontWeight: 600 }}>Email *</label>
-            <input
-              value={form.email}
-              onChange={(e) => setField("email", e.target.value)}
-              placeholder="name@email.com"
-              style={{ width: "100%", padding: 10, marginTop: 6 }}
-            />
-            {errors.email && (
-              <div style={{ color: "#ef4444", fontSize: 13 }}>{errors.email}</div>
-            )}
-          </div>
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                label="Email"
+                required
+                size="small"
+                fullWidth
+                value={form.email}
+                onChange={(e) => setField("email", e.target.value)}
+                error={!!errors.email}
+                helperText={errors.email}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                label="Phone"
+                size="small"
+                fullWidth
+                value={form.phone}
+                onChange={(e) => setField("phone", e.target.value)}
+                placeholder="optional"
+              />
+            </Grid>
+          </Grid>
 
-          <div>
-            <label style={{ fontWeight: 600 }}>Phone</label>
-            <input
-              value={form.phone}
-              onChange={(e) => setField("phone", e.target.value)}
-              placeholder="optional"
-              style={{ width: "100%", padding: 10, marginTop: 6 }}
-            />
-          </div>
-        </div>
-
-        <div>
-          <label style={{ fontWeight: 600 }}>Describe the item *</label>
-          <textarea
+          <TextField
+            label="Describe the item"
+            required
+            size="small"
+            multiline
+            rows={4}
             value={form.description}
             onChange={(e) => setField("description", e.target.value)}
             placeholder="Color, brand, unique marks, contents, etc."
-            rows={4}
-            style={{ width: "100%", padding: 10, marginTop: 6 }}
+            error={!!errors.description}
+            helperText={errors.description}
           />
-          {errors.description && (
-            <div style={{ color: "#ef4444", fontSize: 13 }}>{errors.description}</div>
-          )}
-        </div>
 
-        <div>
-          <label style={{ fontWeight: 600 }}>
-            Verification Question * (example)
-          </label>
-          <input
+          <TextField
+            label="Verification Question (example)"
+            required
+            size="small"
             value={form.verificationAnswer}
             onChange={(e) => setField("verificationAnswer", e.target.value)}
             placeholder="What is one unique detail only you know?"
-            style={{ width: "100%", padding: 10, marginTop: 6 }}
+            error={!!errors.verificationAnswer}
+            helperText={errors.verificationAnswer}
           />
-          {errors.verificationAnswer && (
-            <div style={{ color: "#ef4444", fontSize: 13 }}>
-              {errors.verificationAnswer}
-            </div>
+
+          <Button
+            type="submit"
+            variant="contained"
+            disabled={submitting}
+          >
+            {submitting ? "Submitting..." : "Submit Claim Request"}
+          </Button>
+
+          {result && (
+            <Alert
+              severity={result.status === "Rejected" ? "error" : "info"}
+              icon={false}
+            >
+              <Stack direction="row" spacing={1} alignItems="center">
+                <Chip
+                  label={result.status}
+                  size="small"
+                  color={result.status === "Rejected" ? "error" : "warning"}
+                />
+                <Typography variant="body2">{result.message}</Typography>
+              </Stack>
+            </Alert>
           )}
-        </div>
 
-        <button
-          type="submit"
-          disabled={submitting}
-          style={{
-            padding: "10px 14px",
-            borderRadius: 10,
-            border: "none",
-            fontWeight: 700,
-            cursor: submitting ? "not-allowed" : "pointer",
-          }}
-        >
-          {submitting ? "Submitting..." : "Submit Claim Request"}
-        </button>
-
-        {result && (
-          <div
-            style={{
-              padding: 12,
-              borderRadius: 10,
-              background: "#f8fafc",
-              display: "flex",
-              gap: 10,
-              alignItems: "center",
-            }}
-          >
-            <StatusTag status={result.status} />
-            <span>{result.message}</span>
-          </div>
-        )}
-
-        <div style={{ display: "flex", gap: 10 }}>
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            style={{
-              padding: "10px 14px",
-              borderRadius: 10,
-              border: "1px solid #ddd",
-              background: "#fff",
-              cursor: "pointer",
-            }}
-          >
-            Back
-          </button>
-
-          <button
-            type="button"
-            onClick={() => navigate("/claims")}
-            style={{
-              padding: "10px 14px",
-              borderRadius: 10,
-              border: "1px solid #ddd",
-              background: "#fff",
-              cursor: "pointer",
-            }}
-          >
-            View My Claims
-          </button>
-        </div>
-      </form>
-    </div>
+          <Stack direction="row" spacing={1.5}>
+            <Button variant="outlined" onClick={() => navigate(-1)}>
+              Back
+            </Button>
+            <Button variant="outlined" onClick={() => navigate("/claims")}>
+              View My Claims
+            </Button>
+          </Stack>
+        </Stack>
+      </Paper>
+    </Container>
   );
 }

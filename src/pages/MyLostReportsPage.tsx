@@ -5,29 +5,22 @@ import { useCategories } from '../hooks/useCategories'
 import { useLocations } from '../hooks/useLocations'
 import { useAuth } from '../context/AuthContext'
 import { getErrorMessage, isAuthError } from '../utils/errorMessages'
+import {
+  Alert,
+  Button,
+  Chip,
+  CircularProgress,
+  Container,
+  Paper,
+  Stack,
+  Typography,
+} from '@mui/material'
 
-function StatusTag({ status }: { status: string }) {
-  let color = '#3b82f6'
-
-  if (status === 'approved') color = '#16a34a'
-  if (status === 'claimed' || status === 'completed') color = '#16a34a'
-  if (status === 'pending') color = '#f59e0b'
-
-  return (
-    <span
-      style={{
-        padding: '4px 10px',
-        borderRadius: '999px',
-        background: `${color}15`,
-        color,
-        fontWeight: 600,
-        fontSize: '12px',
-        textTransform: 'capitalize',
-      }}
-    >
-      {status}
-    </span>
-  )
+const statusColorMap: Record<string, 'info' | 'warning' | 'success'> = {
+  pending: 'warning',
+  approved: 'success',
+  claimed: 'success',
+  completed: 'success',
 }
 
 export default function MyLostReportsPage() {
@@ -45,49 +38,62 @@ export default function MyLostReportsPage() {
   )
 
   return (
-    <div style={{ padding: '24px' }}>
-      <h2 style={{ marginBottom: '16px' }}>My Lost Item Reports</h2>
+    <Container sx={{ py: 3 }}>
+      <Typography variant="h5" sx={{ mb: 2 }}>
+        My Lost Item Reports
+      </Typography>
 
       {isLoading ? (
-        <p>Loading…</p>
+        <CircularProgress />
       ) : error ? (
-        <div style={{ padding: '16px', borderRadius: '8px', background: isAuthError(error) ? '#e3f2fd' : '#fdecea', marginBottom: '16px' }}>
-          <p style={{ margin: 0, color: isAuthError(error) ? '#1565c0' : '#c62828' }}>
-            {getErrorMessage(error, 'Failed to load lost reports.')}
-          </p>
-          {isAuthError(error) && (
-            <a href="/login" style={{ color: '#1565c0', fontWeight: 600, marginTop: '8px', display: 'inline-block' }}>Sign In</a>
-          )}
-        </div>
+        <Alert
+          severity={isAuthError(error) ? 'info' : 'error'}
+          action={
+            isAuthError(error) ? (
+              <Button color="inherit" size="small" href="/login">
+                Sign In
+              </Button>
+            ) : undefined
+          }
+        >
+          {getErrorMessage(error, 'Failed to load lost reports.')}
+        </Alert>
       ) : items.length === 0 ? (
-        <p style={{ color: '#666' }}>You haven't reported any lost items yet.</p>
+        <Typography variant="body2" color="text.secondary">
+          You haven't reported any lost items yet.
+        </Typography>
       ) : (
-        <div style={{ display: 'grid', gap: '12px' }}>
+        <Stack spacing={1.5}>
           {items.map((r) => (
-            <div
+            <Paper
               key={r.id}
-              style={{
-                background: '#fff',
-                borderRadius: '12px',
-                padding: '16px',
-                boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
+              sx={{
+                p: 2,
+                borderRadius: 3,
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
               }}
             >
               <div>
-                <div style={{ fontWeight: 700 }}>{r.title}</div>
-                <div style={{ color: '#666', fontSize: '14px' }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+                  {r.title}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
                   Location: {r.location}
-                </div>
+                </Typography>
               </div>
 
-              <StatusTag status={r.status} />
-            </div>
+              <Chip
+                label={r.status}
+                size="small"
+                color={statusColorMap[r.status] ?? 'default'}
+                sx={{ textTransform: 'capitalize' }}
+              />
+            </Paper>
           ))}
-        </div>
+        </Stack>
       )}
-    </div>
+    </Container>
   )
 }
