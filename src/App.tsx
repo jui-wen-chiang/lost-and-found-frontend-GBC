@@ -10,6 +10,13 @@ import MyPostsPage from './pages/MyPostsPage'
 import EditPostPage from './pages/EditPostPage'
 import AppointmentsPage from './pages/AppointmentsPage'
 import CouponsPage from './pages/CouponsPage'
+import UserDashboardPage from './pages/UserDashboardPage'
+import ClaimRequestPage from './pages/ClaimRequestPage'
+import MyClaimsPage from './pages/MyClaimsPage'
+import AppointmentSchedulerPage from './pages/AppointmentSchedulerPage'
+import AppointmentConfirmationPage from './pages/AppointmentConfirmationPage'
+import AdminAuditQueuePage from './pages/AdminAuditQueuePage'
+import AdminAuditDetailPage from './pages/AdminAuditDetailPage'
 
 // ✅ Added for Personal Dashboard (Person C - FR-7)
 import DashboardHomePage from './pages/DashboardHomePage'
@@ -20,7 +27,6 @@ function App() {
   return (
     <BrowserRouter>
       <NavBar />
-      <div style={{ padding: 8, background: "yellow" }}>APP ROUTES UPDATED ✅</div>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
@@ -30,11 +36,17 @@ function App() {
         <Route path="/items/:id" element={<ItemDetailPage />} />
         <Route path="/my-posts" element={<MyPostsPage />} />
         <Route path="/my-posts/:id/edit" element={<EditPostPage />} />
-        <Route path="/appointments" element={<AppointmentsPage />} />
-        <Route path="/coupons" element={<CouponsPage />} />
-        <Route path="/dashboard" element={<DashboardHomePage />} />
+        <Route path="/dashboard" element={<UserDashboardPage />} />
         <Route path="/dashboard/lost" element={<MyLostReportsPage />} />
         <Route path="/dashboard/found" element={<MyFoundReportsPage />} />
+        <Route path="/appointments" element={<AppointmentsPage />} />
+        <Route path="/coupons" element={<CouponsPage />} />
+        <Route path="/claims" element={<MyClaimsPage />} />
+        <Route path="/claims/new/:itemId" element={<ClaimRequestPage />} />
+        <Route path="/appointments/schedule/:itemId" element={<AppointmentSchedulerPage />} />
+        <Route path="/appointments/confirm" element={<AppointmentConfirmationPage />} />
+        <Route path="/admin/audit" element={<AdminAuditQueuePage />} />
+        <Route path="/admin/audit/:id" element={<AdminAuditDetailPage />} />
       </Routes>
     </BrowserRouter>
   )

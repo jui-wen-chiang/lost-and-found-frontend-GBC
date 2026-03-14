@@ -8,9 +8,8 @@ The user-facing interface of the Lost and Found Management System. It offers an 
 1. Clone the repository
 2. Navigate to the project directory: `cd lost-and-found-frontend`
 3. Install dependencies: `npm install` or `yarn install`
-4. Configure environment variables. Create and set up your `.env.development` file.
+4. Configure environment variables. Create and set up your `.env.production` and `.env.development` file.
 5. Start the development server: `npm run dev`
-
 
 ## Deployment & Local Access
 - Production (Vercel): [Lost and Found Management System for George Brown College ](https://lost-and-found-frontend-gbc.vercel.app/)

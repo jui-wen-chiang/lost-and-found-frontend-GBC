@@ -1,5 +1,4 @@
 import React from "react";
-console.log("DashboardHomePage loaded");
 
 export default function DashboardHomePage() {
   const stats = [
