@@ -18,6 +18,11 @@ import AppointmentConfirmationPage from './pages/AppointmentConfirmationPage'
 import AdminAuditQueuePage from './pages/AdminAuditQueuePage'
 import AdminAuditDetailPage from './pages/AdminAuditDetailPage'
 
+// ✅ Added for Personal Dashboard (Person C - FR-7)
+import DashboardHomePage from './pages/DashboardHomePage'
+import MyLostReportsPage from './pages/MyLostReportsPage'
+import MyFoundReportsPage from './pages/MyFoundReportsPage'
+
 function App() {
   return (
     <BrowserRouter>
@@ -26,13 +31,14 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
 
-        
         <Route path="/" element={<HomePage />} />
         <Route path="/items/new" element={<ReportItemPage />} />
         <Route path="/items/:id" element={<ItemDetailPage />} />
         <Route path="/my-posts" element={<MyPostsPage />} />
         <Route path="/my-posts/:id/edit" element={<EditPostPage />} />
         <Route path="/dashboard" element={<UserDashboardPage />} />
+        <Route path="/dashboard/lost" element={<MyLostReportsPage />} />
+        <Route path="/dashboard/found" element={<MyFoundReportsPage />} />
         <Route path="/appointments" element={<AppointmentsPage />} />
         <Route path="/coupons" element={<CouponsPage />} />
         <Route path="/claims" element={<MyClaimsPage />} />
