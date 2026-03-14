@@ -9,7 +9,11 @@
     "dev:full": "concurrently -n BE,FE -c blue,green \"npm run dev:backend\" \"npm run dev\"",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:report": "playwright show-report"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -19,7 +23,6 @@
     "@tanstack/react-query": "^5.90.21",
     "@tanstack/react-query-devtools": "^5.91.3",
     "@types/jest": "^30.0.0",
-    "@types/node": "^25.2.0",
     "@xyflow/react": "^12.10.0",
     "axios": "^1.13.4",
     "qrcode.react": "^4.2.0",
@@ -33,6 +36,8 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@playwright/test": "^1.58.2",
+    "@types/node": "^25.5.0",
     "@types/qrcode.react": "^1.0.5",
     "@types/react": "^19.2.11",
     "@types/react-dom": "^19.2.3",

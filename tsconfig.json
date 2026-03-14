@@ -13,7 +13,7 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "isolatedModules": true,
-    "types": ["vite/client"],
+    "types": ["vite/client", "node"],
     
     // 加入這兩個配置
     "baseUrl": ".",
@@ -22,6 +22,6 @@
       "src/*": ["./src/*"]
     }
   },
-  "include": ["src"],
+  "include": ["src", "e2e", "playwright.config.ts"],
   "exclude": ["node_modules"]
 }
