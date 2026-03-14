@@ -10,6 +10,8 @@ import MyPostsPage from './pages/MyPostsPage'
 import EditPostPage from './pages/EditPostPage'
 import AppointmentsPage from './pages/AppointmentsPage'
 import CouponsPage from './pages/CouponsPage'
+import CouponScanPage from './pages/CouponScanPage'
+import CouponInstructionsPage from './pages/CouponInstructionsPage'
 import UserDashboardPage from './pages/UserDashboardPage'
 import ClaimRequestPage from './pages/ClaimRequestPage'
 import MyClaimsPage from './pages/MyClaimsPage'
@@ -48,6 +50,8 @@ function App() {
         <Route path="/dashboard/found" element={<MyFoundReportsPage />} />
         <Route path="/appointments" element={<AppointmentsPage />} />
         <Route path="/coupons" element={<CouponsPage />} />
+        <Route path="/coupons/instructions" element={<CouponInstructionsPage />} />
+        <Route path="/coupons/:id/scan" element={<CouponScanPage />} />
         <Route path="/claims" element={<MyClaimsPage />} />
         <Route path="/claims/new/:itemId" element={<ClaimRequestPage />} />
         <Route path="/appointments/schedule/:itemId" element={<AppointmentSchedulerPage />} />

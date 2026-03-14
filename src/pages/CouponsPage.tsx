@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Alert,
   Box,
@@ -10,7 +11,7 @@ import {
   Container,
   Divider,
   Grid,
-  Paper,
+  Stack,
   Tab,
   Tabs,
   Tooltip,
@@ -18,78 +19,24 @@ import {
 } from '@mui/material'
 import LocalOfferIcon from '@mui/icons-material/LocalOffer'
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline'
+import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner'
+import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import QRCodeDisplay from 'src/components/QRCodeDisplay'
-
-// ─── Types ────────────────────────────────────────────────────────────────────
-type CouponStatus = 'available' | 'used' | 'expired'
-
-interface Coupon {
-  id: number
-  code: string
-  store: string
-  discount: string
-  description: string
-  expiresAt: string
-  status: CouponStatus
-}
-
-// ─── Mock data – replace with API fetch ───────────────────────────────────────
-const MOCK_COUPONS: Coupon[] = [
-  {
-    id: 1,
-    code: 'GBC-CAFE-2024',
-    store: 'Campus Café',
-    discount: '20% off',
-    description: 'Valid on any beverage purchase at the Ground Floor Café.',
-    expiresAt: '2025-12-31',
-    status: 'available',
-  },
-  {
-    id: 2,
-    code: 'GBC-BOOK-15',
-    store: 'Campus Bookstore',
-    discount: '$15 off',
-    description: 'Redeem for any purchase over $50 at the main bookstore.',
-    expiresAt: '2025-09-30',
-    status: 'available',
-  },
-  {
-    id: 3,
-    code: 'GBC-PARK-FREE',
-    store: 'Campus Parking',
-    discount: '1 free day',
-    description: 'One free day of parking at Lot B. Show QR at exit gate.',
-    expiresAt: '2025-07-01',
-    status: 'used',
-  },
-  {
-    id: 4,
-    code: 'GBC-GYM-PASS',
-    store: 'Recreation Centre',
-    discount: '3-day guest pass',
-    description: 'Bring a friend for free — 3 consecutive days.',
-    expiresAt: '2024-12-01',
-    status: 'expired',
-  },
-]
-
-const STATUS_COLOR: Record<CouponStatus, 'success' | 'default' | 'error'> = {
-  available: 'success',
-  used: 'default',
-  expired: 'error',
-}
-
-const STATUS_LABEL: Record<CouponStatus, string> = {
-  available: 'Available',
-  used: 'Used',
-  expired: 'Expired',
-}
+import {
+  MOCK_COUPONS,
+  STATUS_COLOR,
+  STATUS_LABEL,
+  redeemUrl,
+  daysUntilExpiry,
+} from 'src/data/coupons'
 
 const TAB_VALUES = ['all', 'available', 'used', 'expired'] as const
 type TabValue = (typeof TAB_VALUES)[number]
 
 // ─── Component ────────────────────────────────────────────────────────────────
 function CouponsPage() {
+  const navigate = useNavigate()
   const [tab, setTab] = useState<TabValue>('all')
   const [activatedIds, setActivatedIds] = useState<Set<number>>(new Set())
 
@@ -102,19 +49,29 @@ function CouponsPage() {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      {/* Header */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
-        <LocalOfferIcon color="primary" fontSize="large" />
-        <Typography variant="h4" fontWeight={700}>
-          My Coupons
-        </Typography>
-      </Box>
+      {/* ── Header ── */}
+      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <LocalOfferIcon color="primary" fontSize="large" />
+          <Typography variant="h4" fontWeight={700}>
+            My Coupons
+          </Typography>
+        </Box>
+        <Button
+          variant="text"
+          startIcon={<HelpOutlineIcon />}
+          size="small"
+          onClick={() => navigate('/coupons/instructions')}
+        >
+          How to use
+        </Button>
+      </Stack>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Coupons are awarded when you successfully return a found item. Show the QR
-        code at the participating store to redeem your discount.
+        Coupons are awarded when you successfully return a found item. Activate a
+        coupon, then show the QR code at the participating store.
       </Typography>
 
-      {/* Tabs */}
+      {/* ── Tabs ── */}
       <Tabs
         value={tab}
         onChange={(_, v) => setTab(v as TabValue)}
@@ -135,10 +92,12 @@ function CouponsPage() {
         </Alert>
       )}
 
+      {/* ── Coupon cards ── */}
       <Grid container spacing={3}>
         {visible.map((coupon) => {
           const isActivated = activatedIds.has(coupon.id)
           const canActivate = coupon.status === 'available' && !isActivated
+          const daysLeft = daysUntilExpiry(coupon.expiresAt)
 
           return (
             <Grid key={coupon.id} size={{ xs: 12, sm: 6, md: 4 }}>
@@ -148,11 +107,40 @@ function CouponsPage() {
                   height: '100%',
                   display: 'flex',
                   flexDirection: 'column',
+                  position: 'relative',
                   opacity: coupon.status !== 'available' ? 0.65 : 1,
                   transition: 'box-shadow 0.15s',
+                  borderColor: isActivated ? 'success.main' : undefined,
+                  borderWidth: isActivated ? 2 : undefined,
                   '&:hover': coupon.status === 'available' ? { boxShadow: 4 } : undefined,
                 }}
               >
+                {/* ACTIVATED ribbon */}
+                {isActivated && (
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      top: 10,
+                      right: -1,
+                      bgcolor: 'success.main',
+                      color: 'white',
+                      px: 1.5,
+                      py: 0.3,
+                      fontSize: 11,
+                      fontWeight: 700,
+                      letterSpacing: 0.5,
+                      borderRadius: '4px 0 0 4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.5,
+                      zIndex: 1,
+                    }}
+                  >
+                    <CheckCircleIcon sx={{ fontSize: 13 }} />
+                    ACTIVATED
+                  </Box>
+                )}
+
                 <CardContent sx={{ flex: 1 }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                     <Chip
@@ -161,11 +149,18 @@ function CouponsPage() {
                       size="small"
                     />
                     <Tooltip title={`Expires: ${coupon.expiresAt}`} arrow>
-                      <InfoOutlinedIcon fontSize="small" color="action" />
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, cursor: 'default' }}>
+                        <InfoOutlinedIcon fontSize="small" color={daysLeft <= 7 && coupon.status === 'available' ? 'warning' : 'action'} />
+                        {daysLeft > 0 && coupon.status === 'available' && (
+                          <Typography variant="caption" color={daysLeft <= 7 ? 'warning.main' : 'text.disabled'}>
+                            {daysLeft}d left
+                          </Typography>
+                        )}
+                      </Box>
                     </Tooltip>
                   </Box>
 
-                  <Typography variant="h6" fontWeight={700}>
+                  <Typography variant="h5" fontWeight={800} color="primary.main">
                     {coupon.discount}
                   </Typography>
                   <Typography variant="subtitle2" color="text.secondary" gutterBottom>
@@ -177,17 +172,37 @@ function CouponsPage() {
 
                   <Divider sx={{ my: 1.5 }} />
 
-                  {/* QR code — FR-8 */}
-                  {coupon.status === 'available' && (
+                  {/* Inline QR preview (available only, shown after activation) */}
+                  {coupon.status === 'available' && isActivated && (
                     <Box sx={{ display: 'flex', justifyContent: 'center', mt: 1 }}>
                       <QRCodeDisplay
-                        value={`https://lost-and-found.example.com/redeem/${coupon.code}`}
+                        value={redeemUrl(coupon.code)}
                         label={coupon.code}
-                        size={130}
-                        expandable={isActivated}
+                        size={120}
+                        expandable
                       />
                     </Box>
                   )}
+
+                  {/* Pre-activation placeholder */}
+                  {coupon.status === 'available' && !isActivated && (
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        height: 80,
+                        bgcolor: 'grey.100',
+                        borderRadius: 1.5,
+                        gap: 1,
+                        color: 'text.disabled',
+                      }}
+                    >
+                      <QrCodeScannerIcon />
+                      <Typography variant="caption">Activate to reveal QR</Typography>
+                    </Box>
+                  )}
+
                   {coupon.status !== 'available' && (
                     <Typography
                       variant="caption"
@@ -201,7 +216,8 @@ function CouponsPage() {
                   )}
                 </CardContent>
 
-                <CardActions sx={{ px: 2, pb: 2 }}>
+                <CardActions sx={{ px: 2, pb: 2, flexDirection: 'column', gap: 1 }}>
+                  {/* Activate button */}
                   {canActivate && (
                     <Button
                       fullWidth
@@ -212,10 +228,27 @@ function CouponsPage() {
                       Activate &amp; Show QR
                     </Button>
                   )}
-                  {isActivated && coupon.status === 'available' && (
-                    <Alert severity="success" sx={{ width: '100%', py: 0.5 }}>
-                      Coupon activated — show the QR to the cashier.
-                    </Alert>
+
+                  {/* Post-activation: scan page button */}
+                  {isActivated && (
+                    <>
+                      <Alert
+                        icon={<CheckCircleIcon fontSize="small" />}
+                        severity="success"
+                        sx={{ width: '100%', py: 0.5 }}
+                      >
+                        Ready to use at {coupon.store}
+                      </Alert>
+                      <Button
+                        fullWidth
+                        variant="outlined"
+                        color="success"
+                        startIcon={<QrCodeScannerIcon />}
+                        onClick={() => navigate(`/coupons/${coupon.id}/scan`)}
+                      >
+                        Open Full-Screen QR
+                      </Button>
+                    </>
                   )}
                 </CardActions>
               </Card>
@@ -223,33 +256,6 @@ function CouponsPage() {
           )
         })}
       </Grid>
-
-      {/* Usage instructions */}
-      <Paper variant="outlined" sx={{ mt: 5, p: 3, bgcolor: 'grey.50', borderRadius: 2 }}>
-        <Typography variant="h6" fontWeight={700} gutterBottom>
-          How to use your coupons
-        </Typography>
-        <Box component="ol" sx={{ pl: 2, m: 0, '& li': { mb: 1 } }}>
-          <Typography component="li" variant="body2">
-            Tap <strong>Activate &amp; Show QR</strong> on an available coupon.
-          </Typography>
-          <Typography component="li" variant="body2">
-            Click <strong>View QR Code</strong> to open the full-screen code.
-          </Typography>
-          <Typography component="li" variant="body2">
-            Show the QR code to the cashier or point-of-sale scanner at the
-            participating store.
-          </Typography>
-          <Typography component="li" variant="body2">
-            Each coupon can only be redeemed once. Used coupons are marked
-            automatically.
-          </Typography>
-          <Typography component="li" variant="body2">
-            Coupons expire on the date shown. Expired coupons cannot be
-            redeemed.
-          </Typography>
-        </Box>
-      </Paper>
     </Container>
   )
 }
