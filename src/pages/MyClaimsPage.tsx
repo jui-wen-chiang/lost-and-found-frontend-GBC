@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
-function StatusTag({ status }) {
+function StatusTag({ status }: { status: string }) {
   let color = "#f59e0b";
   if (status === "Approved") color = "#16a34a";
   if (status === "Rejected") color = "#ef4444";

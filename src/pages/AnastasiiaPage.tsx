@@ -12,9 +12,10 @@ import {
 import ItemPostForm, { CATEGORIES, LOCATIONS } from '../components/items/ItemPostForm'
 import DeleteItemDialog from '../components/items/DeleteItemDialog'
 import ItemList from '../components/items/ItemList'
+import { Item, FormValues } from 'src/types/item'
 
 // helper: resolve display labels from FK ids
-function resolveLabels(formData) {
+function resolveLabels(formData: FormValues) {
   const category = CATEGORIES.find((c) => c.id === formData.category_id)?.name ?? 'Other'
   const loc = LOCATIONS.find((l) => l.id === formData.location_id)
   const location = loc ? `${loc.campus_name} — ${loc.building}, ${loc.room_area}` : 'Unknown'
@@ -61,12 +62,12 @@ const MOCK_ITEMS = [
 ]
 
 function AnastasiiaPage() {
-  const [items, setItems] = useState(MOCK_ITEMS)
+  const [items, setItems] = useState<Item[]>(MOCK_ITEMS as Item[])
   const [createOpen, setCreateOpen] = useState(false)
-  const [editItem, setEditItem] = useState(null)
-  const [deleteItem, setDeleteItem] = useState(null)
+  const [editItem, setEditItem] = useState<Item | null>(null)
+  const [deleteItem, setDeleteItem] = useState<Item | null>(null)
 
-  const handleCreate = (formData) => {
+  const handleCreate = (formData: FormValues) => {
     const { category, location } = resolveLabels(formData)
     setItems((prev) => [
       { ...formData, id: Date.now(), category, location, status: 'pending' },
@@ -75,18 +76,18 @@ function AnastasiiaPage() {
     setCreateOpen(false)
   }
 
-  const handleEdit = (formData) => {
+  const handleEdit = (formData: FormValues) => {
     const { category, location } = resolveLabels(formData)
     setItems((prev) =>
       prev.map((item) =>
-        item.id === editItem.id ? { ...item, ...formData, category, location } : item
+        item.id === editItem?.id ? { ...item, ...formData, category, location } : item
       )
     )
     setEditItem(null)
   }
 
   const handleDelete = () => {
-    setItems((prev) => prev.filter((item) => item.id !== deleteItem.id))
+    setItems((prev) => prev.filter((item) => item.id !== deleteItem?.id))
     setDeleteItem(null)
   }
 

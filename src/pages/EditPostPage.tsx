@@ -2,13 +2,14 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { Container, Typography } from '@mui/material'
 
 import ItemPostForm from '../components/items/ItemPostForm'
+import { FormValues } from 'src/types/item'
 
 function EditPostPage() {
   const { state } = useLocation()
   const navigate = useNavigate()
   const item = state?.item
 
-  const handleSubmit = (formData) => {
+  const handleSubmit = (formData: FormValues) => {
     // TODO: PUT to API
     console.log('Updated item:', formData)
     navigate('/my-posts')

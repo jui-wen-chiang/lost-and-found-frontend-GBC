@@ -19,19 +19,18 @@ import {
 } from '@mui/material'
 
 import { CATEGORIES, LOCATIONS } from '../items/ItemPostForm'
+import { Filters } from 'src/types/item'
 
-/**
- * FilterPanel – advanced filter drawer/panel.
- *
- * Props:
- *   open       – boolean, whether panel is visible
- *   filters    – { type, categories, locationId, dateFrom, dateTo }
- *   onChange   – (updatedFilters) => void
- */
-function FilterPanel({ open, filters, onChange }) {
-  const update = (key, value) => onChange({ ...filters, [key]: value })
+interface Props {
+  open: boolean
+  filters: Filters
+  onChange: (filters: Filters) => void
+}
 
-  const toggleCategory = (catId) => {
+function FilterPanel({ open, filters, onChange }: Props) {
+  const update = (key: keyof Filters, value: unknown) => onChange({ ...filters, [key]: value })
+
+  const toggleCategory = (catId: number) => {
     const current = filters.categories || []
     const next = current.includes(catId)
       ? current.filter((c) => c !== catId)
@@ -169,7 +168,7 @@ function FilterPanel({ open, filters, onChange }) {
   )
 }
 
-function ActiveFilterChips({ filters, onChange }) {
+function ActiveFilterChips({ filters, onChange }: { filters: Filters; onChange: (f: Filters) => void }) {
   const chips = []
 
   if (filters.type && filters.type !== 'all') {
@@ -202,7 +201,7 @@ function ActiveFilterChips({ filters, onChange }) {
       clear: () => onChange({ ...filters, dateTo: '' }),
     })
   }
-  ;(filters.categories || []).forEach((catId) => {
+  ;(filters.categories || []).forEach((catId: number) => {
     const cat = CATEGORIES.find((c) => c.id === catId)
     if (cat) {
       chips.push({

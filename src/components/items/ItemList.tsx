@@ -1,6 +1,13 @@
 import { Box, Button, Typography } from '@mui/material'
+import { Item } from 'src/types/item'
 
-function ItemList({ items, onEdit, onDelete }) {
+interface Props {
+  items: Item[]
+  onEdit?: (item: Item) => void
+  onDelete?: (item: Item) => void
+}
+
+function ItemList({ items, onEdit, onDelete }: Props) {
   if (!items.length) {
     return <Typography sx={{ mt: 2 }}>No items yet.</Typography>
   }
@@ -35,14 +42,16 @@ function ItemList({ items, onEdit, onDelete }) {
             )}
           </Box>
 
-          <Box sx={{ display: 'flex', gap: 1, flexShrink: 0, ml: 2 }}>
-            <Button size="small" onClick={() => onEdit(item)}>
-              Edit
-            </Button>
-            <Button size="small" color="error" onClick={() => onDelete(item)}>
-              Delete
-            </Button>
-          </Box>
+          {(onEdit || onDelete) && (
+            <Box sx={{ display: 'flex', gap: 1, flexShrink: 0, ml: 2 }}>
+              {onEdit && (
+                <Button size="small" onClick={() => onEdit(item)}>Edit</Button>
+              )}
+              {onDelete && (
+                <Button size="small" color="error" onClick={() => onDelete(item)}>Delete</Button>
+              )}
+            </Box>
+          )}
         </Box>
       ))}
     </Box>

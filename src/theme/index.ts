@@ -1,4 +1,19 @@
 import { createTheme, alpha, getContrastRatio, responsiveFontSizes } from '@mui/material/styles';
+
+declare module '@mui/material/styles' {
+  interface TypographyVariants {
+    stepTitle: import('react').CSSProperties
+  }
+  interface TypographyVariantsOptions {
+    stepTitle?: import('react').CSSProperties
+  }
+  interface Palette {
+    neutral: Palette['primary']
+  }
+  interface PaletteOptions {
+    neutral?: PaletteOptions['primary']
+  }
+}
 import { FontFamilyScheme, ColorScheme, BreakPointsSchem } from "src/theme/UIstandard"
 
 let theme = createTheme({

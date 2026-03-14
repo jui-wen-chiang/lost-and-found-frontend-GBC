@@ -6,8 +6,16 @@ import {
   DialogContentText,
   DialogTitle,
 } from '@mui/material'
+import { Item } from 'src/types/item'
 
-function DeleteItemDialog({ open, item, onConfirm, onCancel }) {
+interface Props {
+  open: boolean
+  item: Item | null | undefined
+  onConfirm: () => void
+  onCancel: () => void
+}
+
+function DeleteItemDialog({ open, item, onConfirm, onCancel }: Props) {
   return (
     <Dialog open={open} onClose={onCancel}>
       <DialogTitle>Delete Post</DialogTitle>

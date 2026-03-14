@@ -8,6 +8,7 @@ import FilterPanel from '../components/search/FilterPanel'
 import SortOptions from '../components/search/SortOptions'
 import ItemCard from '../components/items/ItemCard'
 import ItemList from '../components/items/ItemList'
+import { Item, Filters } from 'src/types/item'
 
 // ─── Mock data (replace with API call) ───────────────────────────────────────
 const MOCK_ITEMS = [
@@ -97,7 +98,7 @@ const MOCK_ITEMS = [
   },
 ]
 
-const EMPTY_FILTERS = {
+const EMPTY_FILTERS: Filters = {
   type: 'all',
   categories: [],
   campus: '',
@@ -108,7 +109,7 @@ const EMPTY_FILTERS = {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function countActiveFilters(filters) {
+function countActiveFilters(filters: Filters): number {
   let n = 0
   if (filters.type && filters.type !== 'all') n++
   if (filters.campus) n++
@@ -119,7 +120,7 @@ function countActiveFilters(filters) {
   return n
 }
 
-function applyFiltersAndSort(items, query, filters, sort) {
+function applyFiltersAndSort(items: Item[], query: string, filters: Filters, sort: string): Item[] {
   let result = [...items]
 
   // Text search
@@ -159,7 +160,7 @@ function applyFiltersAndSort(items, query, filters, sort) {
 
   // Category multi-select
   if (filters.categories?.length) {
-    result = result.filter((item) => filters.categories.includes(item.category_id))
+    result = result.filter((item) => filters.categories.includes(item.category_id as number))
   }
 
   // Sort
@@ -269,7 +270,7 @@ function HomePage() {
       ) : viewMode === 'grid' ? (
         <Grid container spacing={2}>
           {results.map((item) => (
-            <Grid item xs={12} sm={6} md={4} key={item.id}>
+            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={item.id}>
               <ItemCard item={item} />
             </Grid>
           ))}

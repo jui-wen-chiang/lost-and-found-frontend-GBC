@@ -15,6 +15,7 @@ import {
   Typography,
 } from '@mui/material'
 import PhotoUpload from './PhotoUpload'
+import { FormValues, Photo } from 'src/types/item'
 
 export const CATEGORIES = [
   { id: 1, name: 'Electronics' },
@@ -34,7 +35,7 @@ export const LOCATIONS = [
   { id: 5, campus_name: 'Waterfront', building: 'Building A', room_area: 'Main Hall' },
 ]
 
-const EMPTY_FORM = {
+const EMPTY_FORM: FormValues = {
   type: 'lost',
   title: '',
   category_id: '',
@@ -44,14 +45,21 @@ const EMPTY_FORM = {
   photos: [],
 }
 
-function ItemPostForm({ initialValues = {}, onSubmit, onCancel, submitLabel = 'Submit' }) {
-  const [form, setForm] = useState({ ...EMPTY_FORM, ...initialValues })
+interface Props {
+  initialValues?: Partial<FormValues>
+  onSubmit: (form: FormValues) => void
+  onCancel?: () => void
+  submitLabel?: string
+}
 
-  const handleChange = (field) => (e) => {
+function ItemPostForm({ initialValues = {}, onSubmit, onCancel, submitLabel = 'Submit' }: Props) {
+  const [form, setForm] = useState<FormValues>({ ...EMPTY_FORM, ...initialValues })
+
+  const handleChange = (field: keyof FormValues) => (e: { target: { value: unknown } }) => {
     setForm((prev) => ({ ...prev, [field]: e.target.value }))
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     onSubmit(form)
   }
@@ -131,7 +139,7 @@ function ItemPostForm({ initialValues = {}, onSubmit, onCancel, submitLabel = 'S
         </Typography>
         <PhotoUpload
           photos={form.photos}
-          onChange={(photos) => setForm((prev) => ({ ...prev, photos }))}
+          onChange={(photos: Photo[]) => setForm((prev) => ({ ...prev, photos }))}
         />
       </Box>
 

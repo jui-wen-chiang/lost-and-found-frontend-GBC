@@ -4,6 +4,7 @@ import { Box, Button, Container, Typography } from '@mui/material'
 
 import ItemList from '../components/items/ItemList'
 import DeleteItemDialog from '../components/items/DeleteItemDialog'
+import { Item } from 'src/types/item'
 
 const MOCK_ITEMS = [
   {
@@ -47,14 +48,14 @@ const MOCK_ITEMS = [
 function MyPostsPage() {
   const navigate = useNavigate()
   const [items, setItems] = useState(MOCK_ITEMS)
-  const [deleteItem, setDeleteItem] = useState(null)
+  const [deleteItem, setDeleteItem] = useState<Item | null>(null)
 
-  const handleEdit = (item) => {
+  const handleEdit = (item: Item) => {
     navigate(`/my-posts/${item.id}/edit`, { state: { item } })
   }
 
   const handleDelete = () => {
-    setItems((prev) => prev.filter((i) => i.id !== deleteItem.id))
+    setItems((prev) => prev.filter((i) => i.id !== deleteItem?.id))
     setDeleteItem(null)
   }
 

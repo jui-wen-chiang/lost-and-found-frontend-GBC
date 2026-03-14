@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
-const mockSlots = {
+const mockSlots: Record<string, string[]> = {
   "2026-03-10": ["10:00 AM", "11:00 AM", "1:00 PM"],
   "2026-03-11": ["9:30 AM", "12:00 PM", "2:30 PM"],
   "2026-03-12": ["10:30 AM", "1:30 PM", "3:00 PM"],

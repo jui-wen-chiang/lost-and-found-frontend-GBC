@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, ReactNode } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { Photo } from 'src/types/item'
 import {
   Box,
   Button,
@@ -107,13 +108,13 @@ const MOCK_ITEMS = [
   },
 ]
 
-const TYPE_COLOR = { lost: 'error', found: 'success' }
-const STATUS_COLOR = { pending: 'warning', approved: 'success', resolved: 'default' }
-const STATUS_LABEL = { pending: 'Pending Review', approved: 'Active', resolved: 'Resolved' }
+const TYPE_COLOR: Record<string, 'error' | 'success'> = { lost: 'error', found: 'success' }
+const STATUS_COLOR: Record<string, 'warning' | 'success' | 'default'> = { pending: 'warning', approved: 'success', resolved: 'default' }
+const STATUS_LABEL: Record<string, string> = { pending: 'Pending Review', approved: 'Active', resolved: 'Resolved' }
 
 // ─── Image Gallery (OLX/Avito style) ──────────────────────────────────────────
 
-function ImageGallery({ photos }) {
+function ImageGallery({ photos }: { photos: Photo[] }) {
   const [index, setIndex] = useState(0)
 
   if (!photos?.length) {
@@ -247,7 +248,7 @@ function ImageGallery({ photos }) {
 
 // ─── Detail row helper ─────────────────────────────────────────────────────────
 
-function DetailRow({ icon, label, value }) {
+function DetailRow({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
   return (
     <Stack direction="row" spacing={1.5} alignItems="flex-start">
       <Box sx={{ color: 'text.disabled', mt: 0.2, flexShrink: 0 }}>{icon}</Box>

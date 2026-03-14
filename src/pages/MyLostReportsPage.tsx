@@ -1,12 +1,16 @@
 import React from "react";
 
-const foundReports = [
-  { id: 1, title: "Found Keys", location: "Casa Loma", status: "Pending Claim" },
-  { id: 2, title: "Found Jacket", location: "St. James", status: "Returned" },
+const lostReports = [
+  { id: 1, title: "Lost Wallet", location: "Casa Loma", status: "In-progress" },
+  { id: 2, title: "Lost Phone", location: "St. James", status: "Found" },
+  { id: 3, title: "Lost Notebook", location: "Waterfront", status: "Expired" },
 ];
 
-function StatusTag({ status }) {
-  const color = status === "Returned" ? "#16a34a" : "#f59e0b";
+function StatusTag({ status }: { status: string }) {
+  let color = "#3b82f6";
+
+  if (status === "Found") color = "#16a34a";
+  if (status === "Expired") color = "#ef4444";
 
   return (
     <span
@@ -24,14 +28,14 @@ function StatusTag({ status }) {
   );
 }
 
-// ✅ IMPORTANT: default export
-export default function MyFoundReportsPage() {
+// ✅ IMPORTANT: DEFAULT EXPORT
+export default function MyLostReportsPage() {
   return (
     <div style={{ padding: "24px" }}>
-      <h2 style={{ marginBottom: "16px" }}>My Found Item Reports</h2>
+      <h2 style={{ marginBottom: "16px" }}>My Lost Item Reports</h2>
 
       <div style={{ display: "grid", gap: "12px" }}>
-        {foundReports.map((r) => (
+        {lostReports.map((r) => (
           <div
             key={r.id}
             style={{

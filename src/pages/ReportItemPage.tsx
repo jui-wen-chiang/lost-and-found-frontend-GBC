@@ -2,11 +2,12 @@ import { useNavigate } from 'react-router-dom'
 import { Container, Typography } from '@mui/material'
 
 import ItemPostForm from '../components/items/ItemPostForm'
+import { FormValues } from 'src/types/item'
 
 function ReportItemPage() {
   const navigate = useNavigate()
 
-  const handleSubmit = (formData) => {
+  const handleSubmit = (formData: FormValues) => {
     // TODO: POST to API
     console.log('New item:', formData)
     navigate('/my-posts')

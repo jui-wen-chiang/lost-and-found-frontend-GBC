@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import {
   Badge,
   Box,
@@ -21,7 +20,15 @@ import CloseIcon from '@mui/icons-material/Close'
  *   onToggleFilters – () => void
  *   activeFilterCount – number of active filters (for badge)
  */
-function SearchBar({ query, onQueryChange, filtersOpen, onToggleFilters, activeFilterCount = 0 }) {
+interface Props {
+  query: string
+  onQueryChange: (value: string) => void
+  filtersOpen: boolean
+  onToggleFilters: () => void
+  activeFilterCount?: number
+}
+
+function SearchBar({ query, onQueryChange, filtersOpen, onToggleFilters, activeFilterCount = 0 }: Props) {
   return (
     <Box sx={{ display: 'flex', gap: 1 }}>
       <TextField

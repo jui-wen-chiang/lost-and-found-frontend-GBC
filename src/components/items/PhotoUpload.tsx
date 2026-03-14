@@ -8,24 +8,27 @@ import {
 } from '@mui/material'
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate'
 import CloseIcon from '@mui/icons-material/Close'
+import { Photo } from 'src/types/item'
 
 const MAX_FILES = 5
 const MAX_SIZE_MB = 5
 
+interface Props {
+  photos?: Photo[]
+  onChange: (photos: Photo[]) => void
+  maxFiles?: number
+}
+
 /**
  * PhotoUpload – upload, preview, and remove images.
- *
- * Props:
- *   photos       – array of { id, url, file? } (controlled)
- *   onChange     – (updatedPhotos) => void
- *   maxFiles     – max number of photos (default 5)
  */
-function PhotoUpload({ photos = [], onChange, maxFiles = MAX_FILES }) {
-  const inputRef = useRef(null)
+function PhotoUpload({ photos = [], onChange, maxFiles = MAX_FILES }: Props) {
+  const inputRef = useRef<HTMLInputElement>(null)
   const [dragOver, setDragOver] = useState(false)
   const [error, setError] = useState('')
 
-  const addFiles = (fileList) => {
+  const addFiles = (fileList: FileList | null) => {
+    if (!fileList) return
     setError('')
     const remaining = maxFiles - photos.length
     if (remaining <= 0) {
@@ -33,7 +36,7 @@ function PhotoUpload({ photos = [], onChange, maxFiles = MAX_FILES }) {
       return
     }
 
-    const valid = []
+    const valid: Photo[] = []
     Array.from(fileList)
       .slice(0, remaining)
       .forEach((file) => {
@@ -55,18 +58,18 @@ function PhotoUpload({ photos = [], onChange, maxFiles = MAX_FILES }) {
     if (valid.length) onChange([...photos, ...valid])
   }
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     addFiles(e.target.files)
     e.target.value = ''
   }
 
-  const handleDrop = (e) => {
+  const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
     setDragOver(false)
     addFiles(e.dataTransfer.files)
   }
 
-  const handleRemove = (id) => {
+  const handleRemove = (id: string | number) => {
     const updated = photos.filter((p) => p.id !== id)
     onChange(updated)
   }

@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 
-function StatusTag({ status }) {
+function StatusTag({ status }: { status: string }) {
   let color = "#f59e0b"; // Pending = orange
   if (status === "Approved") color = "#16a34a";
   if (status === "Rejected") color = "#ef4444";
@@ -39,17 +39,17 @@ export default function ClaimRequestPage() {
   );
 
   const [form, setForm] = useState(initial);
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
-  const [result, setResult] = useState(null); // { status, message }
+  const [result, setResult] = useState<{ status: string; message: string } | null>(null);
 
-  const setField = (key, value) => {
+  const setField = (key: string, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
     setErrors((prev) => ({ ...prev, [key]: "" }));
   };
 
   const validate = () => {
-    const e = {};
+    const e: Record<string, string> = {};
     if (!form.fullName.trim()) e.fullName = "Full name is required.";
     if (!form.studentId.trim()) e.studentId = "Student ID is required.";
     if (!form.email.trim()) e.email = "Email is required.";
@@ -63,7 +63,7 @@ export default function ClaimRequestPage() {
     return Object.keys(e).length === 0;
   };
 
-  const onSubmit = async (e) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setResult(null);
 

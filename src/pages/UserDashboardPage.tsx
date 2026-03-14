@@ -11,7 +11,7 @@ function UserDashboardPage() {
       </Typography>
 
       <Grid container spacing={3} sx={{ mt: 1 }}>
-        <Grid item xs={12} sm={6}>
+        <Grid size={{ xs: 12, sm: 6 }}>
           <Paper elevation={2} sx={{ p: 3, textAlign: 'center' }}>
             <Typography variant="h6" gutterBottom>My Posts</Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
@@ -23,7 +23,7 @@ function UserDashboardPage() {
           </Paper>
         </Grid>
 
-        <Grid item xs={12} sm={6}>
+        <Grid size={{ xs: 12, sm: 6 }}>
           <Paper elevation={2} sx={{ p: 3, textAlign: 'center' }}>
             <Typography variant="h6" gutterBottom>Appointments</Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
@@ -35,7 +35,7 @@ function UserDashboardPage() {
           </Paper>
         </Grid>
 
-        <Grid item xs={12} sm={6}>
+        <Grid size={{ xs: 12, sm: 6 }}>
           <Paper elevation={2} sx={{ p: 3, textAlign: 'center' }}>
             <Typography variant="h6" gutterBottom>Report an Item</Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
@@ -47,7 +47,7 @@ function UserDashboardPage() {
           </Paper>
         </Grid>
 
-        <Grid item xs={12} sm={6}>
+        <Grid size={{ xs: 12, sm: 6 }}>
           <Paper elevation={2} sx={{ p: 3, textAlign: 'center' }}>
             <Typography variant="h6" gutterBottom>Coupons</Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>

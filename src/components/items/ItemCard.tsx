@@ -12,14 +12,15 @@ import {
 import LocationOnIcon from '@mui/icons-material/LocationOn'
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday'
 import CategoryIcon from '@mui/icons-material/Category'
+import { Item } from 'src/types/item'
 
-const TYPE_COLOR = { lost: 'error', found: 'success' }
-const STATUS_COLOR = { pending: 'warning', approved: 'success', resolved: 'default' }
+const TYPE_COLOR: Record<string, 'error' | 'success' | 'default'> = { lost: 'error', found: 'success' }
+const STATUS_COLOR: Record<string, 'warning' | 'success' | 'default'> = { pending: 'warning', approved: 'success', resolved: 'default' }
 
 /**
  * ItemCard – grid card for a single lost/found item.
  */
-function ItemCard({ item }) {
+function ItemCard({ item }: { item: Item }) {
   const navigate = useNavigate()
 
   return (

@@ -14,7 +14,13 @@ export const SORT_OPTIONS = [
  *   onChange  – (value) => void
  *   total     – optional result count to display
  */
-function SortOptions({ sort, onChange, total }) {
+interface Props {
+  sort: string
+  onChange: (value: string) => void
+  total?: number
+}
+
+function SortOptions({ sort, onChange, total }: Props) {
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
       {total !== undefined && (
