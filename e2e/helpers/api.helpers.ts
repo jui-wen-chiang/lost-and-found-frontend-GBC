@@ -93,9 +93,17 @@ export async function createItem(
   token: string,
   data: ItemPayload,
 ): Promise<ApiItem> {
-  const res = await request.post(`${API_BASE}/api/items/items/`, {
+  const res = await request.post(`${API_BASE}/api/items/`, {
     headers: { Authorization: `Bearer ${token}` },
-    data,
+    multipart: {
+      title: data.title,
+      description: data.description,
+      item_type: data.item_type,
+      category: String(data.category),
+      location: String(data.location),
+      ...(data.lost_at ? { lost_at: data.lost_at } : {}),
+      ...(data.found_at ? { found_at: data.found_at } : {}),
+    },
   })
   if (!res.ok()) {
     const body = await res.text()
@@ -110,7 +118,7 @@ export async function deleteItem(
   token: string,
   itemId: number,
 ): Promise<void> {
-  const res = await request.delete(`${API_BASE}/api/items/items/${itemId}/`, {
+  const res = await request.delete(`${API_BASE}/api/items/${itemId}/`, {
     headers: { Authorization: `Bearer ${token}` },
   })
   if (!res.ok() && res.status() !== 404) {
@@ -137,7 +145,7 @@ export async function fetchCategories(
   request: APIRequestContext,
   token: string,
 ): Promise<Category[]> {
-  const res = await request.get(`${API_BASE}/api/categories/categories/`, {
+  const res = await request.get(`${API_BASE}/api/categories/`, {
     headers: { Authorization: `Bearer ${token}` },
   })
   return res.json()
@@ -148,7 +156,7 @@ export async function fetchLocations(
   request: APIRequestContext,
   token: string,
 ): Promise<Location[]> {
-  const res = await request.get(`${API_BASE}/api/locations/locations/`, {
+  const res = await request.get(`${API_BASE}/api/locations/`, {
     headers: { Authorization: `Bearer ${token}` },
   })
   return res.json()
