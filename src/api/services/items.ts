@@ -10,25 +10,25 @@ export async function fetchItems(filters?: ItemFilters): Promise<ApiItem[]> {
       }
     });
   }
-  const res = await apiClient.get<ApiItem[]>('/api/items/items/', { params });
+  const res = await apiClient.get<ApiItem[]>('/api/items/', { params });
   return res.data;
 }
 
 export async function fetchItem(id: number): Promise<ApiItem> {
-  const res = await apiClient.get<ApiItem>(`/api/items/items/${id}/`);
+  const res = await apiClient.get<ApiItem>(`/api/items/${id}/`);
   return res.data;
 }
 
 export async function createItem(data: ItemCreateRequest): Promise<ApiItem> {
-  const res = await apiClient.post<ApiItem>('/api/items/items/', data);
+  const res = await apiClient.post<ApiItem>('/api/items/', data);
   return res.data;
 }
 
 export async function updateItem(id: number, data: ItemUpdateRequest): Promise<ApiItem> {
-  const res = await apiClient.patch<ApiItem>(`/api/items/items/${id}/`, data);
+  const res = await apiClient.patch<ApiItem>(`/api/items/${id}/`, data);
   return res.data;
 }
 
 export async function deleteItem(id: number): Promise<void> {
-  await apiClient.delete(`/api/items/items/${id}/`);
+  await apiClient.delete(`/api/items/${id}/`);
 }
