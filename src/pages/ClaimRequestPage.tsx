@@ -12,10 +12,12 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import { useCreateClaim } from "../hooks/useClaims";
 
 export default function ClaimRequestPage() {
   const { itemId } = useParams();
   const navigate = useNavigate();
+  const createClaim = useCreateClaim();
 
   const initial = useMemo(
     () => ({
@@ -31,7 +33,6 @@ export default function ClaimRequestPage() {
 
   const [form, setForm] = useState(initial);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<{ status: string; message: string } | null>(null);
 
   const setField = (key: string, value: string) => {
@@ -60,25 +61,32 @@ export default function ClaimRequestPage() {
 
     if (!validate()) return;
 
-    setSubmitting(true);
+    const message = [
+      `Name: ${form.fullName}`,
+      `Student ID: ${form.studentId}`,
+      `Email: ${form.email}`,
+      form.phone ? `Phone: ${form.phone}` : '',
+      `Description: ${form.description}`,
+      `Verification: ${form.verificationAnswer}`,
+    ].filter(Boolean).join('\n');
 
-    try {
-      console.log("Submitting claim request:", { itemId, ...form });
-      await new Promise((r) => setTimeout(r, 700));
-
-      setResult({
-        status: "Pending",
-        message: "Claim request submitted. Status: Pending.",
-      });
-    } catch (err) {
-      console.error(err);
-      setResult({
-        status: "Rejected",
-        message: "Something went wrong submitting your request.",
-      });
-    } finally {
-      setSubmitting(false);
-    }
+    createClaim.mutate(
+      { item: Number(itemId), message },
+      {
+        onSuccess: () => {
+          setResult({
+            status: "Pending",
+            message: "Claim request submitted. Status: Pending.",
+          });
+        },
+        onError: (err: unknown) => {
+          const detail =
+            (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ??
+            "Something went wrong submitting your request.";
+          setResult({ status: "Rejected", message: detail });
+        },
+      }
+    );
   };
 
   return (
@@ -169,9 +177,9 @@ export default function ClaimRequestPage() {
           <Button
             type="submit"
             variant="contained"
-            disabled={submitting}
+            disabled={createClaim.isPending}
           >
-            {submitting ? "Submitting..." : "Submit Claim Request"}
+            {createClaim.isPending ? "Submitting..." : "Submit Claim Request"}
           </Button>
 
           {result && (

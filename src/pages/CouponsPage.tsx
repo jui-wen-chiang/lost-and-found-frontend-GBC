@@ -8,6 +8,7 @@ import {
   CardActions,
   CardContent,
   Chip,
+  CircularProgress,
   Container,
   Divider,
   Grid,
@@ -23,13 +24,17 @@ import HelpOutlineIcon from '@mui/icons-material/HelpOutline'
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import QRCodeDisplay from 'src/components/QRCodeDisplay'
-import {
-  MOCK_COUPONS,
-  STATUS_COLOR,
-  STATUS_LABEL,
-  redeemUrl,
-  daysUntilExpiry,
-} from 'src/data/coupons'
+import { useUserCoupons, useActivateCoupon } from 'src/hooks/useCoupons'
+import type { ApiCoupon } from 'src/types/api'
+import { redeemUrl, daysUntilExpiry, STATUS_COLOR, STATUS_LABEL } from 'src/data/coupons'
+
+type CouponStatus = 'available' | 'used' | 'expired'
+
+function deriveCouponStatus(c: ApiCoupon): CouponStatus {
+  if (c.is_redeemed) return 'used'
+  if (daysUntilExpiry(c.expires_at) <= 0) return 'expired'
+  return 'available'
+}
 
 const TAB_VALUES = ['all', 'available', 'used', 'expired'] as const
 type TabValue = (typeof TAB_VALUES)[number]
@@ -39,12 +44,37 @@ function CouponsPage() {
   const navigate = useNavigate()
   const [tab, setTab] = useState<TabValue>('all')
   const [activatedIds, setActivatedIds] = useState<Set<number>>(new Set())
+  const { data: coupons, isLoading, error: fetchError } = useUserCoupons()
+  const activateCoupon = useActivateCoupon()
+
+  if (isLoading) {
+    return (
+      <Container sx={{ py: 4, textAlign: 'center' }}>
+        <CircularProgress />
+      </Container>
+    )
+  }
+
+  if (fetchError) {
+    return (
+      <Container sx={{ py: 4 }}>
+        <Alert severity="error">Failed to load coupons.</Alert>
+      </Container>
+    )
+  }
+
+  const enriched = (coupons ?? []).map((c) => ({
+    ...c,
+    status: deriveCouponStatus(c),
+  }))
 
   const visible =
-    tab === 'all' ? MOCK_COUPONS : MOCK_COUPONS.filter((c) => c.status === tab)
+    tab === 'all' ? enriched : enriched.filter((c) => c.status === tab)
 
-  function handleActivate(id: number) {
-    setActivatedIds((prev) => new Set(prev).add(id))
+  function handleActivate(coupon: ApiCoupon & { status: CouponStatus }) {
+    activateCoupon.mutate(coupon.code, {
+      onSuccess: () => setActivatedIds((prev) => new Set(prev).add(coupon.id)),
+    })
   }
 
   return (
@@ -97,7 +127,7 @@ function CouponsPage() {
         {visible.map((coupon) => {
           const isActivated = activatedIds.has(coupon.id)
           const canActivate = coupon.status === 'available' && !isActivated
-          const daysLeft = daysUntilExpiry(coupon.expiresAt)
+          const daysLeft = daysUntilExpiry(coupon.expires_at)
 
           return (
             <Grid key={coupon.id} size={{ xs: 12, sm: 6, md: 4 }}>
@@ -148,7 +178,7 @@ function CouponsPage() {
                       color={STATUS_COLOR[coupon.status]}
                       size="small"
                     />
-                    <Tooltip title={`Expires: ${coupon.expiresAt}`} arrow>
+                    <Tooltip title={`Expires: ${coupon.expires_at}`} arrow>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, cursor: 'default' }}>
                         <InfoOutlinedIcon fontSize="small" color={daysLeft <= 7 && coupon.status === 'available' ? 'warning' : 'action'} />
                         {daysLeft > 0 && coupon.status === 'available' && (
@@ -161,13 +191,10 @@ function CouponsPage() {
                   </Box>
 
                   <Typography variant="h5" fontWeight={800} color="primary.main">
-                    {coupon.discount}
-                  </Typography>
-                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                    {coupon.store}
+                    {coupon.code}
                   </Typography>
                   <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    {coupon.description}
+                    Coupon #{coupon.id}
                   </Typography>
 
                   <Divider sx={{ my: 1.5 }} />
@@ -223,7 +250,7 @@ function CouponsPage() {
                       fullWidth
                       variant="contained"
                       color="success"
-                      onClick={() => handleActivate(coupon.id)}
+                      onClick={() => handleActivate(coupon)}
                     >
                       Activate &amp; Show QR
                     </Button>
@@ -237,7 +264,7 @@ function CouponsPage() {
                         severity="success"
                         sx={{ width: '100%', py: 0.5 }}
                       >
-                        Ready to use at {coupon.store}
+                        Ready to use
                       </Alert>
                       <Button
                         fullWidth

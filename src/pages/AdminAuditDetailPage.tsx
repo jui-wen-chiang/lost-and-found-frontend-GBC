@@ -4,31 +4,59 @@ import {
   Alert,
   Box,
   Button,
+  CircularProgress,
   Container,
   Paper,
   Stack,
   TextField,
   Typography,
 } from "@mui/material";
+import { useItem } from "../hooks/useItems";
+import { useApprovePost, useRejectPost } from "../hooks/useAdmin";
 
 export default function AdminAuditDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const numId = Number(id);
+
+  const { data: item, isLoading, error: fetchError } = useItem(numId);
+  const approvePost = useApprovePost();
+  const rejectPost = useRejectPost();
 
   const [decision, setDecision] = useState("");
   const [reason, setReason] = useState("");
-  const [submitted, setSubmitted] = useState(false);
 
   const handleApprove = () => {
-    setDecision("Approved");
-    setSubmitted(true);
+    approvePost.mutate(numId, {
+      onSuccess: () => setDecision("Approved"),
+    });
   };
 
   const handleReject = () => {
     if (!reason.trim()) return;
-    setDecision("Rejected");
-    setSubmitted(true);
+    rejectPost.mutate(
+      { id: numId, reason },
+      { onSuccess: () => setDecision("Rejected") }
+    );
   };
+
+  if (isLoading) {
+    return (
+      <Container maxWidth="md" sx={{ py: 3 }}>
+        <CircularProgress />
+      </Container>
+    );
+  }
+
+  if (fetchError || !item) {
+    return (
+      <Container maxWidth="md" sx={{ py: 3 }}>
+        <Alert severity="error">Failed to load post details.</Alert>
+      </Container>
+    );
+  }
+
+  const submitted = !!decision;
 
   return (
     <Container maxWidth="md" sx={{ py: 3 }}>
@@ -41,10 +69,10 @@ export default function AdminAuditDetailPage() {
 
       <Paper sx={{ p: 3, borderRadius: 3 }}>
         <Stack spacing={1.5}>
-          <Typography><strong>Item:</strong> Black Wallet</Typography>
-          <Typography><strong>Description:</strong> Black leather wallet found near library entrance.</Typography>
-          <Typography><strong>Location:</strong> Casa Loma</Typography>
-          <Typography><strong>Submitted By:</strong> John</Typography>
+          <Typography><strong>Item:</strong> {item.title}</Typography>
+          <Typography><strong>Description:</strong> {item.description}</Typography>
+          <Typography><strong>Type:</strong> {item.item_type}</Typography>
+          <Typography><strong>Status:</strong> {item.status}</Typography>
 
           {!submitted ? (
             <>
@@ -53,15 +81,17 @@ export default function AdminAuditDetailPage() {
                   variant="contained"
                   color="success"
                   onClick={handleApprove}
+                  disabled={approvePost.isPending}
                 >
-                  Approve
+                  {approvePost.isPending ? "Approving…" : "Approve"}
                 </Button>
                 <Button
                   variant="contained"
                   color="error"
                   onClick={handleReject}
+                  disabled={rejectPost.isPending}
                 >
-                  Reject
+                  {rejectPost.isPending ? "Rejecting…" : "Reject"}
                 </Button>
               </Stack>
 

@@ -1,9 +1,24 @@
-// Placeholder — no backend endpoints for coupons yet.
-// When the backend adds /api/coupons/ endpoints, implement hooks here following
-// the same pattern as useItems.ts.
-//
-// Expected API shape:
-//   GET    /api/coupons/           → Coupon[]
-//   PATCH  /api/coupons/:id/      → Coupon  (activate / redeem)
-//
-// Expected Coupon: { id, code, user, claim, discount_amount, expires_at, is_redeemed, created_at }
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { fetchUserCoupons, activateCoupon } from '../api/services/coupons';
+
+export const couponKeys = {
+  all: ['coupons'] as const,
+  mine: () => [...couponKeys.all, 'mine'] as const,
+};
+
+export function useUserCoupons() {
+  return useQuery({
+    queryKey: couponKeys.mine(),
+    queryFn: fetchUserCoupons,
+  });
+}
+
+export function useActivateCoupon() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (code: string) => activateCoupon(code),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: couponKeys.mine() });
+    },
+  });
+}

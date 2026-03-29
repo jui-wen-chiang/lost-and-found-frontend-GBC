@@ -13,18 +13,28 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
+import { useCreateAppointment } from "../hooks/useAppointments";
 
-const mockSlots: Record<string, string[]> = {
+const defaultSlots: Record<string, string[]> = {
   "2026-03-10": ["10:00 AM", "11:00 AM", "1:00 PM"],
   "2026-03-11": ["9:30 AM", "12:00 PM", "2:30 PM"],
   "2026-03-12": ["10:30 AM", "1:30 PM", "3:00 PM"],
 };
 
+function toISODateTime(date: string, time12: string): string {
+  const [timePart, meridiem] = time12.split(" ");
+  let [h, m] = timePart.split(":").map(Number);
+  if (meridiem === "PM" && h !== 12) h += 12;
+  if (meridiem === "AM" && h === 12) h = 0;
+  return `${date}T${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00`;
+}
+
 export default function AppointmentSchedulerPage() {
   const navigate = useNavigate();
   const { itemId } = useParams();
+  const createAppointment = useCreateAppointment();
 
-  const dates = useMemo(() => Object.keys(mockSlots), []);
+  const dates = useMemo(() => Object.keys(defaultSlots), []);
   const [selectedDate, setSelectedDate] = useState(dates[0]);
   const [selectedTime, setSelectedTime] = useState("");
   const [error, setError] = useState("");
@@ -35,14 +45,26 @@ export default function AppointmentSchedulerPage() {
       return;
     }
 
-    navigate("/appointments/confirm", {
-      state: {
-        itemId,
-        date: selectedDate,
-        time: selectedTime,
-        location: "Casa Loma Campus Security Office",
-      },
-    });
+    const scheduled_at = toISODateTime(selectedDate, selectedTime);
+
+    createAppointment.mutate(
+      { claim: Number(itemId), scheduled_at },
+      {
+        onSuccess: () => {
+          navigate("/appointments/confirm", {
+            state: {
+              itemId,
+              date: selectedDate,
+              time: selectedTime,
+              location: "Casa Loma Campus Security Office",
+            },
+          });
+        },
+        onError: () => {
+          setError("Failed to schedule appointment. Please try again.");
+        },
+      }
+    );
   };
 
   return (
@@ -83,7 +105,7 @@ export default function AppointmentSchedulerPage() {
               Available Time Slots
             </Typography>
             <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
-              {mockSlots[selectedDate].map((slot) => {
+              {defaultSlots[selectedDate].map((slot) => {
                 const active = selectedTime === slot;
                 return (
                   <Chip
@@ -108,8 +130,8 @@ export default function AppointmentSchedulerPage() {
           </Box>
 
           <Box>
-            <Button variant="contained" onClick={handleContinue}>
-              Continue
+            <Button variant="contained" onClick={handleContinue} disabled={createAppointment.isPending}>
+              {createAppointment.isPending ? "Scheduling…" : "Continue"}
             </Button>
           </Box>
         </Stack>

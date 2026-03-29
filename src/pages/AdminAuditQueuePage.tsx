@@ -1,28 +1,34 @@
 import React from "react";
 import { Link as RouterLink } from "react-router-dom";
 import {
+  Alert,
   Button,
+  CircularProgress,
   Container,
   Paper,
   Stack,
   Typography,
 } from "@mui/material";
-
-const mockPendingPosts = [
-  { id: 201, title: "Black Wallet", user: "John", date: "2026-03-01" },
-  { id: 202, title: "Blue Backpack", user: "Sara", date: "2026-03-02" },
-  { id: 203, title: "Student Card", user: "Alex", date: "2026-03-02" },
-];
+import { usePendingPosts } from "../hooks/useAdmin";
 
 export default function AdminAuditQueuePage() {
+  const { data: posts, isLoading, error } = usePendingPosts();
+
   return (
     <Container sx={{ py: 3 }}>
       <Typography variant="h5" sx={{ mb: 2 }}>
         Admin Audit Queue
       </Typography>
 
+      {isLoading && <CircularProgress />}
+      {error && <Alert severity="error">Failed to load pending posts.</Alert>}
+
+      {!isLoading && !error && (posts ?? []).length === 0 && (
+        <Alert severity="info">No pending posts to review.</Alert>
+      )}
+
       <Stack spacing={1.5} sx={{ maxWidth: 900 }}>
-        {mockPendingPosts.map((post) => (
+        {(posts ?? []).map((post) => (
           <Paper
             key={post.id}
             sx={{
@@ -38,7 +44,7 @@ export default function AdminAuditQueuePage() {
                 {post.title}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                User: {post.user} &bull; Date: {post.date}
+                Type: {post.item_type} &bull; Created: {post.created_at?.slice(0, 10)}
               </Typography>
             </div>
 

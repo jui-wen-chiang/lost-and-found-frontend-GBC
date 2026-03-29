@@ -1,10 +1,14 @@
-// Placeholder — no backend endpoints for appointments yet.
-// When the backend adds /api/appointments/ endpoints, implement hooks here following
-// the same pattern as useItems.ts.
-//
-// Expected API shape:
-//   GET    /api/appointments/           → Appointment[]
-//   POST   /api/appointments/           → Appointment
-//   PATCH  /api/appointments/:id/       → Appointment
-//
-// Expected Appointment: { id, claim, location, scheduled_at, status, created_at, updated_at }
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { createAppointment } from '../api/services/appointments';
+import type { AppointmentCreateRequest } from '../types/api';
+import { claimKeys } from './useClaims';
+
+export function useCreateAppointment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: AppointmentCreateRequest) => createAppointment(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: claimKeys.mine() });
+    },
+  });
+}

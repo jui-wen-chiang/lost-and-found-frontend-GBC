@@ -1,11 +1,25 @@
-// Placeholder — no backend endpoints for claims yet.
-// When the backend adds /api/claims/ endpoints, implement hooks here following
-// the same pattern as useItems.ts (useQuery for lists, useMutation for CRUD).
-//
-// Expected API shape:
-//   GET    /api/claims/           → Claim[]
-//   POST   /api/claims/           → Claim
-//   GET    /api/claims/:id/       → Claim
-//   PATCH  /api/claims/:id/       → Claim
-//
-// Expected Claim: { id, item, claimant, message, status, created_at, updated_at }
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { fetchMyClaims, createClaim } from '../api/services/claims';
+import type { ClaimCreateRequest } from '../types/api';
+
+export const claimKeys = {
+  all: ['claims'] as const,
+  mine: () => [...claimKeys.all, 'mine'] as const,
+};
+
+export function useMyClaims() {
+  return useQuery({
+    queryKey: claimKeys.mine(),
+    queryFn: fetchMyClaims,
+  });
+}
+
+export function useCreateClaim() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: ClaimCreateRequest) => createClaim(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: claimKeys.mine() });
+    },
+  });
+}

@@ -115,6 +115,12 @@ function LoginPage() {
             </Button>
 
             <Typography variant="body2" textAlign="center">
+              <Link component={RouterLink} to="/forgot-password" underline="hover">
+                Forgot password?
+              </Link>
+            </Typography>
+
+            <Typography variant="body2" textAlign="center">
               Don't have an account?{' '}
               <Link component={RouterLink} to="/register" underline="hover">
                 Register

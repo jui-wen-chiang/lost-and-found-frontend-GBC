@@ -41,6 +41,64 @@ export interface LogoutRequest {
   refresh: string;
 }
 
+// ─── Password Reset ──────────────────────────────────────────────────────────
+
+export interface PasswordResetRequest {
+  email: string;
+}
+
+export interface PasswordResetConfirmRequest {
+  token: string;
+  new_password: string;
+  new_password_confirm: string;
+}
+
+// ─── Claims ──────────────────────────────────────────────────────────────────
+
+export type ClaimStatus = 'pending' | 'approved' | 'rejected' | 'completed';
+
+export interface ApiClaim {
+  id: number;
+  item: number;
+  claimant: number;
+  message: string;
+  status: ClaimStatus;
+  created_at: string;
+}
+
+export interface ClaimCreateRequest {
+  item: number;
+  message?: string;
+}
+
+// ─── Appointments ────────────────────────────────────────────────────────────
+
+export type AppointmentStatus = 'scheduled' | 'cancelled' | 'completed';
+
+export interface ApiAppointment {
+  id: number;
+  claim: number;
+  location: number | null;
+  scheduled_at: string;
+  status: AppointmentStatus;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AppointmentCreateRequest {
+  claim: number;
+  scheduled_at: string;
+}
+
+// ─── Coupons ─────────────────────────────────────────────────────────────────
+
+export interface ApiCoupon {
+  id: number;
+  code: string;
+  is_redeemed: boolean;
+  expires_at: string;
+}
+
 // ─── Items ───────────────────────────────────────────────────────────────────
 
 export type ItemType = 'lost' | 'found';

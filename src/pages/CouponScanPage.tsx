@@ -5,6 +5,7 @@ import {
   Box,
   Button,
   Chip,
+  CircularProgress,
   Container,
   Divider,
   IconButton,
@@ -15,7 +16,10 @@ import {
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import BrightnessHighIcon from '@mui/icons-material/BrightnessHigh'
 import { useState } from 'react'
-import { MOCK_COUPONS, STATUS_COLOR, STATUS_LABEL, redeemUrl, daysUntilExpiry } from 'src/data/coupons'
+import { useUserCoupons } from 'src/hooks/useCoupons'
+import { STATUS_COLOR, STATUS_LABEL, redeemUrl, daysUntilExpiry } from 'src/data/coupons'
+
+type CouponStatus = 'available' | 'used' | 'expired'
 
 /**
  * CouponScanPage — FR-8: Full-screen QR code display optimised for
@@ -27,10 +31,19 @@ export default function CouponScanPage() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [bright, setBright] = useState(false)
+  const { data: coupons, isLoading } = useUserCoupons()
 
-  const coupon = MOCK_COUPONS.find((c) => String(c.id) === String(id))
+  if (isLoading) {
+    return (
+      <Container maxWidth="sm" sx={{ py: 8, textAlign: 'center' }}>
+        <CircularProgress />
+      </Container>
+    )
+  }
 
-  if (!coupon) {
+  const raw = (coupons ?? []).find((c) => String(c.id) === String(id))
+
+  if (!raw) {
     return (
       <Container maxWidth="sm" sx={{ py: 8, textAlign: 'center' }}>
         <Typography variant="h5" gutterBottom>Coupon not found</Typography>
@@ -41,7 +54,8 @@ export default function CouponScanPage() {
     )
   }
 
-  const daysLeft = daysUntilExpiry(coupon.expiresAt)
+  const status: CouponStatus = raw.is_redeemed ? 'used' : daysUntilExpiry(raw.expires_at) <= 0 ? 'expired' : 'available'
+  const daysLeft = daysUntilExpiry(raw.expires_at)
 
   return (
     <Box
@@ -69,7 +83,7 @@ export default function CouponScanPage() {
           <ArrowBackIcon />
         </IconButton>
         <Typography variant="subtitle1" fontWeight={700} noWrap sx={{ flex: 1, textAlign: 'center', mx: 1 }}>
-          {coupon.store}
+          Coupon {raw.code}
         </Typography>
         <Tooltip title={bright ? 'Dim screen' : 'Boost brightness for scanning'}>
           <IconButton
@@ -104,18 +118,11 @@ export default function CouponScanPage() {
             textAlign="center"
             sx={{ color: bright ? 'primary.main' : 'white', lineHeight: 1.1 }}
           >
-            {coupon.discount}
-          </Typography>
-          <Typography
-            variant="h6"
-            textAlign="center"
-            sx={{ color: bright ? 'text.secondary' : 'grey.400' }}
-          >
-            {coupon.store}
+            {raw.code}
           </Typography>
           <Chip
-            label={STATUS_LABEL[coupon.status]}
-            color={STATUS_COLOR[coupon.status]}
+            label={STATUS_LABEL[status]}
+            color={STATUS_COLOR[status]}
             size="small"
             sx={{ mt: 0.5 }}
           />
@@ -131,7 +138,7 @@ export default function CouponScanPage() {
           }}
         >
           <QRCodeSVG
-            value={redeemUrl(coupon.code)}
+            value={redeemUrl(raw.code)}
             size={260}
             level="H"
             marginSize={2}
@@ -149,15 +156,15 @@ export default function CouponScanPage() {
               fontSize: 15,
             }}
           >
-            {coupon.code}
+            {raw.code}
           </Typography>
           {daysLeft > 0 ? (
             <Typography variant="caption" sx={{ color: daysLeft <= 7 ? 'warning.light' : (bright ? 'text.disabled' : 'grey.500') }}>
-              Expires {coupon.expiresAt} · {daysLeft} day{daysLeft !== 1 ? 's' : ''} left
+              Expires {raw.expires_at} · {daysLeft} day{daysLeft !== 1 ? 's' : ''} left
             </Typography>
           ) : (
             <Typography variant="caption" color="error.light">
-              Expired on {coupon.expiresAt}
+              Expired on {raw.expires_at}
             </Typography>
           )}
         </Stack>
@@ -179,9 +186,9 @@ export default function CouponScanPage() {
           cashier confirms the scan.
         </Alert>
 
-        {coupon.status !== 'available' && (
+        {status !== 'available' && (
           <Alert severity="warning" sx={{ width: '100%', maxWidth: 420 }}>
-            This coupon has already been <strong>{coupon.status}</strong> and may
+            This coupon has already been <strong>{status}</strong> and may
             not be accepted.
           </Alert>
         )}
