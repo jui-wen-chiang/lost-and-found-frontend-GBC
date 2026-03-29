@@ -31,21 +31,30 @@ import { useItem } from '../hooks/useItems'
 import { useCategories } from '../hooks/useCategories'
 import { useLocations } from '../hooks/useLocations'
 import { getErrorMessage, isAuthError } from '../utils/errorMessages'
+import { useAuth } from '../context/AuthContext'
 
 import WarningAmberIcon from '@mui/icons-material/WarningAmber'
 
 const TYPE_COLOR: Record<string, 'error' | 'success'> = { lost: 'error', found: 'success' }
-const STATUS_COLOR: Record<string, 'warning' | 'success' | 'default' | 'error'> = {
+const STATUS_COLOR: Record<string, 'warning' | 'success' | 'default' | 'error' | 'info'> = {
   pending: 'warning',
   approved: 'success',
+  claimed: 'info',
+  completed: 'default',
   resolved: 'default',
   expired: 'error',
 }
-const STATUS_LABEL: Record<string, string> = {
-  pending: 'Pending Review',
-  approved: 'Active',
-  resolved: 'Resolved',
-  expired: 'Expired',
+
+function getStatusLabel(status: string, itemType: string): string {
+  switch (status) {
+    case 'pending':   return 'Pending Review'
+    case 'approved':  return 'Active'
+    case 'claimed':   return itemType === 'lost' ? 'Match Found' : 'Claimed'
+    case 'completed': return itemType === 'lost' ? 'Reunited' : 'Returned'
+    case 'resolved':  return 'Resolved'
+    case 'expired':   return 'Expired'
+    default:          return status
+  }
 }
 
 // ─── Image Gallery (OLX/Avito style) ──────────────────────────────────────────
@@ -207,6 +216,7 @@ function ItemDetailPage() {
   const navigate = useNavigate()
   const numId = Number(id)
 
+  const { user } = useAuth()
   const { data: apiItem, isLoading, error } = useItem(numId)
   const { data: categories = [] } = useCategories()
   const { data: locations = [] } = useLocations()
@@ -264,7 +274,7 @@ function ItemDetailPage() {
               sx={{ fontWeight: 700 }}
             />
             <Chip
-              label={STATUS_LABEL[item.status] || item.status}
+              label={getStatusLabel(item.status, item.type)}
               color={STATUS_COLOR[item.status] || 'default'}
               variant="outlined"
             />
@@ -308,7 +318,7 @@ function ItemDetailPage() {
           </Typography>
 
           {/* Status Timeline — FR: Item Status Timeline */}
-          <ItemStatusTimeline status={item.status} expired={expired} />
+          <ItemStatusTimeline status={item.status} itemType={item.type} expired={expired} />
         </Grid>
 
         {/* Right column – details card + CTA */}
@@ -354,13 +364,13 @@ function ItemDetailPage() {
 
           {/* CTA */}
           <Box sx={{ mt: 2 }}>
-            {item.type === 'found' && item.status === 'approved' && (
+            {item.type === 'found' && item.status === 'approved' && user?.id !== item.owner_id && (
               <Button variant="contained" color="success" fullWidth size="large"
                 onClick={() => navigate(`/claims/new/${item.id}`)}>
                 This is mine — Claim Item
               </Button>
             )}
-            {item.type === 'lost' && item.status === 'approved' && (
+            {item.type === 'lost' && item.status === 'approved' && user?.id !== item.owner_id && (
               <Button variant="contained" color="primary" fullWidth size="large"
                 onClick={() => navigate(`/claims/new/${item.id}`)}>
                 I Found This — Contact Owner

@@ -17,11 +17,25 @@ import { Item } from 'src/types/item'
 import { isExpired } from 'src/utils/itemUtils'
 
 const TYPE_COLOR: Record<string, 'error' | 'success' | 'default'> = { lost: 'error', found: 'success' }
-const STATUS_COLOR: Record<string, 'warning' | 'success' | 'default' | 'error'> = {
+const STATUS_COLOR: Record<string, 'warning' | 'success' | 'default' | 'error' | 'info'> = {
   pending: 'warning',
   approved: 'success',
+  claimed: 'info',
+  completed: 'default',
   resolved: 'default',
   expired: 'error',
+}
+
+function getStatusLabel(status: string, itemType: string): string {
+  switch (status) {
+    case 'pending':   return 'Pending Review'
+    case 'approved':  return 'Active'
+    case 'claimed':   return itemType === 'lost' ? 'Match Found' : 'Claimed'
+    case 'completed': return itemType === 'lost' ? 'Reunited' : 'Returned'
+    case 'resolved':  return 'Resolved'
+    case 'expired':   return 'Expired'
+    default:          return status
+  }
 }
 
 /**
@@ -85,7 +99,7 @@ function ItemCard({ item }: { item: Item }) {
             />
             {item.status && (
               <Chip
-                label={item.status}
+                label={getStatusLabel(item.status, item.type)}
                 color={STATUS_COLOR[item.status] || 'default'}
                 size="small"
                 variant="outlined"

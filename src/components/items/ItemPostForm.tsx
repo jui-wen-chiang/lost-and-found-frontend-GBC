@@ -19,13 +19,15 @@ import { FormValues, Photo } from 'src/types/item'
 import { useCategories } from '../../hooks/useCategories'
 import { useLocations } from '../../hooks/useLocations'
 
+const TODAY = new Date().toISOString().slice(0, 10)
+
 const EMPTY_FORM: FormValues = {
   type: 'lost',
   title: '',
   category_id: '',
   description: '',
   location_id: '',
-  date_lost_found: '',
+  date_lost_found: TODAY,
   photos: [],
 }
 

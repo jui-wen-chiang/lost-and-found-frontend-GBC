@@ -45,17 +45,17 @@ export default function MyClaimsPage() {
   return (
     <Container sx={{ py: 3 }}>
       <Typography variant="h5" sx={{ mb: 2 }}>
-        My Claim Requests
+        My Claims
       </Typography>
 
       {(!claims || claims.length === 0) && (
         <Paper sx={{ p: 4, borderRadius: 3, textAlign: "center" }}>
           <SearchIcon sx={{ fontSize: 56, color: "text.disabled", mb: 1 }} />
           <Typography variant="h6" sx={{ mb: 1 }}>
-            No claim requests yet
+            No claims yet
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Browse found items and submit a claim if you recognize something as yours.
+            Browse items and submit a claim or return request.
           </Typography>
           <Button variant="contained" onClick={() => navigate("/")}>
             Browse Items
@@ -64,7 +64,11 @@ export default function MyClaimsPage() {
       )}
 
       <Stack spacing={1.5} sx={{ maxWidth: 720 }}>
-        {(claims ?? []).map((c) => (
+        {(claims ?? []).map((c) => {
+          const isReturn = c.item_type === "lost";
+          const typeLabel = isReturn ? "Return Request" : "Claim Request";
+          const typeColor = isReturn ? "error" : "success";
+          return (
           <Paper
             key={c.id}
             sx={{
@@ -76,11 +80,14 @@ export default function MyClaimsPage() {
             }}
           >
             <Box>
-              <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-                Claim #{c.id}
-              </Typography>
+              <Stack direction="row" alignItems="center" spacing={1} mb={0.25}>
+                <Chip label={typeLabel} size="small" color={typeColor} variant="outlined" sx={{ fontWeight: 700, fontSize: 11 }} />
+                <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+                  {c.item_title ?? `Item #${c.item}`}
+                </Typography>
+              </Stack>
               <Typography variant="body2" color="text.secondary">
-                Item ID: {c.item} &bull; {new Date(c.created_at).toLocaleDateString()}
+                #{c.id} &bull; {new Date(c.created_at).toLocaleDateString()}
               </Typography>
               <Link
                 component={RouterLink}
@@ -109,7 +116,8 @@ export default function MyClaimsPage() {
               />
             </Stack>
           </Paper>
-        ))}
+          );
+        })}
       </Stack>
     </Container>
   );
