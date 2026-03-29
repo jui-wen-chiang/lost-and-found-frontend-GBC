@@ -161,3 +161,156 @@ export async function fetchLocations(
   })
   return res.json()
 }
+
+// ─── Admin helpers ───────────────────────────────────────────────────────────
+
+/** Approve an item (admin). */
+export async function approveItem(
+  request: APIRequestContext,
+  adminToken: string,
+  itemId: number,
+): Promise<void> {
+  const res = await request.patch(`${API_BASE}/api/admin/items/${itemId}/approve/`, {
+    headers: { Authorization: `Bearer ${adminToken}` },
+  })
+  if (!res.ok()) {
+    const body = await res.text()
+    throw new Error(`Approve item failed (${res.status()}): ${body}`)
+  }
+}
+
+// ─── Claim helpers ───────────────────────────────────────────────────────────
+
+interface ClaimPayload {
+  item: number
+  message: string
+}
+
+interface ApiClaim {
+  id: number
+  item: number
+  claimant: number
+  message: string
+  status: string
+  created_at: string
+}
+
+/** Create a claim via the API. */
+export async function createClaim(
+  request: APIRequestContext,
+  token: string,
+  data: ClaimPayload,
+): Promise<ApiClaim> {
+  const res = await request.post(`${API_BASE}/api/claims/`, {
+    headers: { Authorization: `Bearer ${token}` },
+    data,
+  })
+  if (!res.ok()) {
+    const body = await res.text()
+    throw new Error(`Create claim failed (${res.status()}): ${body}`)
+  }
+  return res.json()
+}
+
+/** Update claim status (admin). */
+export async function updateClaimStatus(
+  request: APIRequestContext,
+  adminToken: string,
+  claimId: number,
+  status: string,
+): Promise<void> {
+  const res = await request.patch(`${API_BASE}/api/claims/${claimId}/status/`, {
+    headers: { Authorization: `Bearer ${adminToken}` },
+    data: { status },
+  })
+  if (!res.ok()) {
+    const body = await res.text()
+    throw new Error(`Update claim status failed (${res.status()}): ${body}`)
+  }
+}
+
+// ─── Appointment helpers ─────────────────────────────────────────────────────
+
+interface AppointmentPayload {
+  claim: number
+  scheduled_at: string
+}
+
+/** Create an appointment via the API. */
+export async function createAppointment(
+  request: APIRequestContext,
+  token: string,
+  data: AppointmentPayload,
+): Promise<{ message: string; appointment_id: number }> {
+  const res = await request.post(`${API_BASE}/api/appointments/`, {
+    headers: { Authorization: `Bearer ${token}` },
+    data,
+  })
+  if (!res.ok()) {
+    const body = await res.text()
+    throw new Error(`Create appointment failed (${res.status()}): ${body}`)
+  }
+  return res.json()
+}
+
+/** Update appointment status (admin). */
+export async function updateAppointmentStatus(
+  request: APIRequestContext,
+  adminToken: string,
+  appointmentId: number,
+  status: string,
+): Promise<{ message: string; status: string }> {
+  const res = await request.patch(
+    `${API_BASE}/api/appointments/${appointmentId}/status/`,
+    {
+      headers: { Authorization: `Bearer ${adminToken}` },
+      data: { status },
+    },
+  )
+  if (!res.ok()) {
+    const body = await res.text()
+    throw new Error(`Update appointment status failed (${res.status()}): ${body}`)
+  }
+  return res.json()
+}
+
+// ─── Coupon helpers ──────────────────────────────────────────────────────────
+
+interface ApiCoupon {
+  id: number
+  code: string
+  is_redeemed: boolean
+  expires_at: string
+}
+
+/** Fetch coupons for a user. */
+export async function fetchUserCoupons(
+  request: APIRequestContext,
+  token: string,
+): Promise<ApiCoupon[]> {
+  const res = await request.get(`${API_BASE}/api/coupons/`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  if (!res.ok()) {
+    const body = await res.text()
+    throw new Error(`Fetch coupons failed (${res.status()}): ${body}`)
+  }
+  return res.json()
+}
+
+// ─── Expiration helpers ──────────────────────────────────────────────────────
+
+/** Trigger expiration scan (admin). */
+export async function triggerExpiration(
+  request: APIRequestContext,
+  adminToken: string,
+): Promise<{ executed_at: string; expired_count: number }> {
+  const res = await request.post(`${API_BASE}/api/reports/trigger-expire/`, {
+    headers: { Authorization: `Bearer ${adminToken}` },
+  })
+  if (!res.ok()) {
+    const body = await res.text()
+    throw new Error(`Trigger expiration failed (${res.status()}): ${body}`)
+  }
+  return res.json()
+}

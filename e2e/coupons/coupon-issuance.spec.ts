@@ -5,54 +5,110 @@
  * Priority:    High
  * Type:        Positive
  *
- * ⚠️  SKIPPED — BACKEND NOT IMPLEMENTED
- *
- * Current state:
- *   - The Coupon model exists (api/models/coupon.py) but has no API endpoints.
- *   - The Claim model exists but has no API endpoints.
- *   - There is no backend logic to automatically issue a coupon when
- *     an admin confirms a successful item return (claim status → "completed").
- *   - The frontend CouponsPage uses hardcoded mock data.
- *
- * This feature requires a complete chain:
- *   1. Admin confirms item return → Claim.status = "completed"
- *   2. Backend signal/hook creates a Coupon record for the finder
- *   3. Coupon appears on the finder's /coupons page
- *
- * Re-enable this test when:
- *   1. PATCH /api/claims/:id/ endpoint supports status = "completed"
- *   2. Backend signal/post_save creates coupon on claim completion
- *   3. GET /api/coupons/ endpoint returns user's coupons
- *   4. Frontend CouponsPage is connected to real API
+ * Tests the complete coupon issuance chain:
+ *   1. Finder reports a found item → admin approves
+ *   2. Claimant submits a claim → admin approves claim
+ *   3. Admin marks the claim as "completed" → backend auto-creates coupon
+ *   4. Claimant verifies coupon appears on /coupons page
  */
 import { test, expect } from '../fixtures/auth.fixture'
+import {
+  registerUser,
+  loginUser,
+  createItem,
+  deleteItem,
+  fetchCategories,
+  fetchLocations,
+  approveItem,
+  createClaim,
+  updateClaimStatus,
+  fetchUserCoupons,
+} from '../helpers/api.helpers'
+import { uniqueEmail, STRONG_PASSWORD, ADMIN_CREDENTIALS } from '../fixtures/test-data'
 
 test.describe('TC-COUPON-002: Automatic Coupon Issuance on Return', () => {
-  test.skip(true, 'Automatic coupon issuance not implemented — see file header')
+  let finderToken: string
+  let claimantToken: string
+  let adminToken: string
+  let itemId: number
 
-  test('coupon should be issued to finder after confirmed return', async ({
-    authenticatedPage: page,
+  test.beforeAll(async ({ request }) => {
+    // Register admin
+    try {
+      await registerUser(request, {
+        email: ADMIN_CREDENTIALS.email,
+        full_name: ADMIN_CREDENTIALS.full_name,
+        password: ADMIN_CREDENTIALS.password,
+        password_confirm: ADMIN_CREDENTIALS.password,
+        role: 'admin',
+      })
+    } catch {
+      // Already exists
+    }
+    const adminLogin = await loginUser(request, ADMIN_CREDENTIALS.email, ADMIN_CREDENTIALS.password)
+    adminToken = adminLogin.access
+
+    // Register finder
+    const finderEmail = uniqueEmail('finder')
+    const finderReg = await registerUser(request, {
+      email: finderEmail,
+      full_name: 'Finder For Coupon',
+      password: STRONG_PASSWORD,
+      password_confirm: STRONG_PASSWORD,
+    })
+    finderToken = finderReg.tokens.access
+
+    // Register claimant
+    const claimantEmail = uniqueEmail('claimant')
+    const claimantReg = await registerUser(request, {
+      email: claimantEmail,
+      full_name: 'Claimant For Coupon',
+      password: STRONG_PASSWORD,
+      password_confirm: STRONG_PASSWORD,
+    })
+    claimantToken = claimantReg.tokens.access
+
+    // Create & approve item
+    const categories = await fetchCategories(request, finderToken)
+    const locations = await fetchLocations(request, finderToken)
+    const item = await createItem(request, finderToken, {
+      title: `E2E Coupon Item ${Date.now()}`,
+      description: 'Found item for coupon E2E test',
+      item_type: 'found',
+      category: categories[0].id,
+      location: locations[0].id,
+    })
+    itemId = item.id
+    await approveItem(request, adminToken, itemId)
+
+    // Claimant creates claim → admin approves → admin completes (triggers coupon)
+    const claim = await createClaim(request, claimantToken, {
+      item: itemId,
+      message: 'This is mine, I lost it yesterday',
+    })
+    await updateClaimStatus(request, adminToken, claim.id, 'approved')
+    await updateClaimStatus(request, adminToken, claim.id, 'completed')
+  })
+
+  test.afterAll(async ({ request }) => {
+    try {
+      await deleteItem(request, finderToken, itemId)
+    } catch {
+      // Best-effort cleanup
+    }
+  })
+
+  test('coupon should be issued to claimant after confirmed return', async ({
+    request,
   }) => {
-    // Test steps (to be implemented when backend is ready):
-    //
-    // Pre-conditions:
-    //   - User A (finder) reports a found item
-    //   - User B (claimant) submits a claim
-    //   - Admin approves the claim
-    //   - Admin schedules and completes the appointment
-    //
-    // 1. Admin confirms item return:
-    //    const adminPage = ... (use admin fixture)
-    //    await adminPage.goto('/admin/appointments')
-    //    await adminPage.getByRole('button', { name: /confirm return/i }).click()
-    //
-    // 2. Log in as the finder (User A)
-    //    await page.goto('/coupons')
-    //
-    // Expected:
-    //    - A new coupon appears in the finder's coupons list
-    //    await expect(page.getByText(/new coupon/i)).toBeVisible()
-    //    - Coupon has valid discount and expiry
-    //    - Coupon can be activated to show QR code
+    // Verify coupon was auto-created for the claimant
+    const coupons = await fetchUserCoupons(request, claimantToken)
+
+    expect(coupons.length).toBeGreaterThanOrEqual(1)
+
+    const coupon = coupons[0]
+    expect(coupon.code).toBeTruthy()
+    expect(coupon.is_redeemed).toBe(false)
+    expect(coupon.expires_at).toBeTruthy()
   })
 })
