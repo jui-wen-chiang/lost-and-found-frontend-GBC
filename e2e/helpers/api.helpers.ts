@@ -112,6 +112,29 @@ export async function createItem(
   return res.json()
 }
 
+/** Update (partial) an item via the API (requires auth token — owner or admin). */
+export async function updateItem(
+  request: APIRequestContext,
+  token: string,
+  itemId: number,
+  data: Partial<ItemPayload>,
+): Promise<ApiItem> {
+  // ItemDetailView uses MultiPartParser only — must send multipart/form-data
+  const multipartData: Record<string, string> = {}
+  for (const [k, v] of Object.entries(data)) {
+    if (v !== undefined) multipartData[k] = String(v)
+  }
+  const res = await request.patch(`${API_BASE}/api/items/${itemId}/`, {
+    headers: { Authorization: `Bearer ${token}` },
+    multipart: multipartData,
+  })
+  if (!res.ok()) {
+    const body = await res.text()
+    throw new Error(`Update item failed (${res.status()}): ${body}`)
+  }
+  return res.json()
+}
+
 /** Delete an item via the API (requires auth token). */
 export async function deleteItem(
   request: APIRequestContext,
@@ -163,6 +186,21 @@ export async function fetchLocations(
 }
 
 // ─── Admin helpers ───────────────────────────────────────────────────────────
+
+/** Fetch the admin audit queue (pending items). */
+export async function fetchAuditQueue(
+  request: APIRequestContext,
+  adminToken: string,
+): Promise<ApiItem[]> {
+  const res = await request.get(`${API_BASE}/api/admin/audit/posts/`, {
+    headers: { Authorization: `Bearer ${adminToken}` },
+  })
+  if (!res.ok()) {
+    const body = await res.text()
+    throw new Error(`Fetch audit queue failed (${res.status()}): ${body}`)
+  }
+  return res.json()
+}
 
 /** Approve an item (admin). */
 export async function approveItem(
@@ -234,6 +272,7 @@ export async function updateClaimStatus(
 interface AppointmentPayload {
   claim: number
   scheduled_at: string
+  location?: number
 }
 
 /** Create an appointment via the API. */
@@ -296,6 +335,92 @@ export async function fetchUserCoupons(
     throw new Error(`Fetch coupons failed (${res.status()}): ${body}`)
   }
   return res.json()
+}
+
+/** Activate a coupon by code (owner user). */
+export async function activateCoupon(
+  request: APIRequestContext,
+  token: string,
+  code: string,
+): Promise<{ message: string }> {
+  const res = await request.post(`${API_BASE}/api/coupons/activate/`, {
+    headers: { Authorization: `Bearer ${token}` },
+    data: { code },
+  })
+  if (!res.ok()) {
+    const body = await res.text()
+    throw new Error(`Activate coupon failed (${res.status()}): ${body}`)
+  }
+  return res.json()
+}
+
+/** Reject an item (admin). */
+export async function rejectItem(
+  request: APIRequestContext,
+  adminToken: string,
+  itemId: number,
+  reason = '',
+): Promise<void> {
+  const res = await request.patch(`${API_BASE}/api/admin/items/${itemId}/reject/`, {
+    headers: { Authorization: `Bearer ${adminToken}` },
+    data: { reason },
+  })
+  if (!res.ok()) {
+    const body = await res.text()
+    throw new Error(`Reject item failed (${res.status()}): ${body}`)
+  }
+}
+
+/**
+ * Attempt to create a claim and return the raw response status + body.
+ * Unlike createClaim, this does NOT throw on non-2xx — useful for negative tests.
+ */
+export async function tryCreateClaim(
+  request: APIRequestContext,
+  token: string,
+  data: { item: number; message: string },
+): Promise<{ status: number; body: Record<string, unknown> }> {
+  const res = await request.post(`${API_BASE}/api/claims/`, {
+    headers: { Authorization: `Bearer ${token}` },
+    data,
+  })
+  const body = await res.json().catch(() => ({}))
+  return { status: res.status(), body }
+}
+
+/**
+ * Attempt to create an appointment and return the raw response.
+ * Does NOT throw on non-2xx — useful for negative tests.
+ */
+export async function tryCreateAppointment(
+  request: APIRequestContext,
+  token: string,
+  data: { claim: number; scheduled_at: string },
+): Promise<{ status: number; body: Record<string, unknown> }> {
+  const res = await request.post(`${API_BASE}/api/appointments/`, {
+    headers: { Authorization: `Bearer ${token}` },
+    data,
+  })
+  const body = await res.json().catch(() => ({}))
+  return { status: res.status(), body }
+}
+
+/**
+ * Attempt to update claim status and return the raw response.
+ * Does NOT throw on non-2xx — useful for negative/state-machine tests.
+ */
+export async function tryUpdateClaimStatus(
+  request: APIRequestContext,
+  adminToken: string,
+  claimId: number,
+  status: string,
+): Promise<{ status: number; body: Record<string, unknown> }> {
+  const res = await request.patch(`${API_BASE}/api/claims/${claimId}/status/`, {
+    headers: { Authorization: `Bearer ${adminToken}` },
+    data: { status },
+  })
+  const body = await res.json().catch(() => ({}))
+  return { status: res.status(), body }
 }
 
 // ─── Expiration helpers ──────────────────────────────────────────────────────

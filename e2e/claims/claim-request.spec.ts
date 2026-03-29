@@ -92,7 +92,7 @@ test.describe('TC-CLAIM-001: Submit Claim and Schedule Appointment', () => {
     await page.getByLabel('Email').fill('claimant@test.example.com')
     await page.getByLabel('Phone').fill('416-555-0100')
     await page.getByLabel('Describe the item').fill('Blue backpack with laptop inside')
-    await page.getByLabel('Verification Question (example)').fill('Has a scratch on the left side')
+    await page.getByLabel('Verification — something only the true owner would know').fill('Has a scratch on the left side')
 
     // Submit the claim
     await page.getByRole('button', { name: 'Submit Claim Request' }).click()

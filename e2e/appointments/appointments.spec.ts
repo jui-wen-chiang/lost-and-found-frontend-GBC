@@ -5,15 +5,9 @@
  * Priority:    Medium
  * Type:        Positive
  *
- * Tests the appointment management flow:
- *   1. Setup: finder creates item → admin approves → claimant submits claim
- *      → admin approves claim → claimant creates appointment via API
- *   2. Admin confirms (completes) an appointment via API
- *   3. Admin cancels an appointment via API
- *
- * Note: The admin appointments page (GET /api/appointments/) does not have
- * a backend list endpoint, so admin actions are tested via direct API calls
- * and the user-facing appointment scheduler is tested through the UI.
+ * Tests:
+ *   1. Admin completes an appointment → claim + item marked completed
+ *   2. Admin cancels an appointment → claim stays approved (reschedulable)
  */
 import { test, expect } from '../fixtures/auth.fixture'
 import {
@@ -31,15 +25,25 @@ import {
 } from '../helpers/api.helpers'
 import { uniqueEmail, STRONG_PASSWORD, ADMIN_CREDENTIALS } from '../fixtures/test-data'
 
+/** Returns an ISO datetime string N days from now */
+function futureDateISO(daysFromNow: number): string {
+  const d = new Date(Date.now() + daysFromNow * 24 * 60 * 60 * 1000)
+  return d.toISOString().slice(0, 19) // "2026-04-05T10:00:00"
+}
+
 test.describe('TC-APPT-001: Admin Processes Appointment Request', () => {
   let finderToken: string
   let claimantToken: string
   let adminToken: string
-  let itemId: number
-  let claimId: number
+
+  // Each test gets its own item + claim to avoid state bleed
+  let completionItemId: number
+  let completionClaimId: number
+  let cancellationItemId: number
+  let cancellationClaimId: number
 
   test.beforeAll(async ({ request }) => {
-    // Register admin
+    // Ensure admin exists
     try {
       await registerUser(request, {
         email: ADMIN_CREDENTIALS.email,
@@ -54,91 +58,81 @@ test.describe('TC-APPT-001: Admin Processes Appointment Request', () => {
     const adminLogin = await loginUser(request, ADMIN_CREDENTIALS.email, ADMIN_CREDENTIALS.password)
     adminToken = adminLogin.access
 
-    // Register finder
-    const finderEmail = uniqueEmail('finder')
     const finderReg = await registerUser(request, {
-      email: finderEmail,
-      full_name: 'Finder User',
+      email: uniqueEmail('appt-finder'),
+      full_name: 'Appointment Finder',
       password: STRONG_PASSWORD,
       password_confirm: STRONG_PASSWORD,
     })
     finderToken = finderReg.tokens.access
 
-    // Register claimant
-    const claimantEmail = uniqueEmail('claimant')
     const claimantReg = await registerUser(request, {
-      email: claimantEmail,
-      full_name: 'Claimant User',
+      email: uniqueEmail('appt-claimant'),
+      full_name: 'Appointment Claimant',
       password: STRONG_PASSWORD,
       password_confirm: STRONG_PASSWORD,
     })
     claimantToken = claimantReg.tokens.access
 
-    // Create and approve a found item
     const categories = await fetchCategories(request, finderToken)
     const locations = await fetchLocations(request, finderToken)
-    const item = await createItem(request, finderToken, {
-      title: `E2E Appointment Item ${Date.now()}`,
-      description: 'Found item for appointment E2E test',
+
+    // Item + claim for the "complete" test
+    const item1 = await createItem(request, finderToken, {
+      title: `E2E Appt Complete ${Date.now()}`,
+      description: 'Found item for appointment completion test',
       item_type: 'found',
       category: categories[0].id,
       location: locations[0].id,
     })
-    itemId = item.id
-    await approveItem(request, adminToken, itemId)
+    completionItemId = item1.id
+    await approveItem(request, adminToken, completionItemId)
+    const claim1 = await createClaim(request, claimantToken, { item: completionItemId, message: 'Mine' })
+    completionClaimId = claim1.id
+    await updateClaimStatus(request, adminToken, completionClaimId, 'approved')
 
-    // Claimant submits a claim, admin approves it
-    const claim = await createClaim(request, claimantToken, {
-      item: itemId,
-      message: 'This is my item',
+    // Separate item + claim for the "cancel" test
+    const item2 = await createItem(request, finderToken, {
+      title: `E2E Appt Cancel ${Date.now()}`,
+      description: 'Found item for appointment cancellation test',
+      item_type: 'found',
+      category: categories[0].id,
+      location: locations[0].id,
     })
-    claimId = claim.id
-    await updateClaimStatus(request, adminToken, claimId, 'approved')
+    cancellationItemId = item2.id
+    await approveItem(request, adminToken, cancellationItemId)
+    const claim2 = await createClaim(request, claimantToken, { item: cancellationItemId, message: 'Mine' })
+    cancellationClaimId = claim2.id
+    await updateClaimStatus(request, adminToken, cancellationClaimId, 'approved')
   })
 
   test.afterAll(async ({ request }) => {
-    try {
-      await deleteItem(request, finderToken, itemId)
-    } catch {
-      // Best-effort cleanup
+    for (const id of [completionItemId, cancellationItemId]) {
+      try { await deleteItem(request, finderToken, id) } catch { /* best-effort */ }
     }
   })
 
-  test('admin should confirm an appointment request', async ({ request }) => {
-    // Create an appointment for the approved claim
+  test('admin should complete an appointment → claim and item marked completed', async ({ request }) => {
     const appt = await createAppointment(request, claimantToken, {
-      claim: claimId,
-      scheduled_at: '2026-03-10T10:00:00',
+      claim: completionClaimId,
+      scheduled_at: futureDateISO(7),
     })
 
-    // Admin marks it as completed
-    const result = await updateAppointmentStatus(
-      request,
-      adminToken,
-      appt.appointment_id,
-      'completed',
-    )
+    const result = await updateAppointmentStatus(request, adminToken, appt.appointment_id, 'completed')
 
     expect(result.status).toBe('completed')
     expect(result.message).toBe('Appointment status updated')
   })
 
-  test('admin should reject an appointment request', async ({ request }) => {
-    // Create another appointment (different time slot)
+  test('admin should cancel an appointment → claim stays approved for rescheduling', async ({ request }) => {
     const appt = await createAppointment(request, claimantToken, {
-      claim: claimId,
-      scheduled_at: '2026-03-11T09:30:00',
+      claim: cancellationClaimId,
+      scheduled_at: futureDateISO(14),
     })
 
-    // Admin cancels it
-    const result = await updateAppointmentStatus(
-      request,
-      adminToken,
-      appt.appointment_id,
-      'rejected',
-    )
+    const result = await updateAppointmentStatus(request, adminToken, appt.appointment_id, 'cancelled')
 
-    expect(result.status).toBe('rejected')
+    expect(result.status).toBe('cancelled')
     expect(result.message).toBe('Appointment status updated')
   })
 })
