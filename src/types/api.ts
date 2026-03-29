@@ -104,6 +104,14 @@ export interface ApiCoupon {
 export type ItemType = 'lost' | 'found';
 export type ItemStatus = 'pending' | 'approved' | 'claimed' | 'completed';
 
+export interface ApiImage {
+  id: number;
+  file_path: string;
+  original_filename: string;
+  is_primary: boolean;
+  uploaded_at: string;
+}
+
 export interface ApiItem {
   id: number;
   title: string;
@@ -117,6 +125,7 @@ export interface ApiItem {
   found_at: string | null;
   created_at: string;
   updated_at: string;
+  images: ApiImage[];
 }
 
 export interface ItemCreateRequest {
@@ -127,6 +136,8 @@ export interface ItemCreateRequest {
   location: number;
   lost_at?: string | null;
   found_at?: string | null;
+  upload_images?: File[];
+  existing_image_ids?: number[];
 }
 
 export interface ItemUpdateRequest extends Partial<ItemCreateRequest> {}

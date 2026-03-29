@@ -9,6 +9,8 @@ import {
   clearTokens,
   decodeToken,
   isTokenExpired,
+  storeUser,
+  getStoredUser,
 } from "../api/tokenStorage";
 
 interface AuthContextType {
@@ -32,14 +34,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const token = getAccessToken();
     if (token && !isTokenExpired(token)) {
-      const payload = decodeToken(token);
-      if (payload) {
-        setUser({
-          id: Number(payload.user_id),
-          email: payload.email ?? "",
-          full_name: "",
-          role: (payload.role as ApiUser["role"]) ?? "student",
-        });
+      const stored = getStoredUser<ApiUser>();
+      if (stored) {
+        setUser(stored);
+      } else {
+        const payload = decodeToken(token);
+        if (payload) {
+          setUser({
+            id: Number(payload.user_id),
+            email: payload.email ?? "",
+            full_name: "",
+            role: (payload.role as ApiUser["role"]) ?? "student",
+          });
+        }
       }
     }
     setIsLoading(false);
@@ -48,6 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback(async (data: LoginRequest) => {
     const res = await loginApi(data);
     setTokens(res.access, res.refresh);
+    storeUser(res.user);
     setUser(res.user);
     queryClient.invalidateQueries();
   }, [queryClient]);
@@ -55,6 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = useCallback(async (data: RegisterRequest) => {
     const res = await registerApi(data);
     setTokens(res.tokens.access, res.tokens.refresh);
+    storeUser(res.user);
     setUser(res.user);
     queryClient.invalidateQueries();
   }, [queryClient]);

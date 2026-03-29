@@ -1,4 +1,4 @@
-import { Button, Container, Grid, Paper, Typography } from '@mui/material'
+import { Button, Container, Divider, Grid, Paper, Typography } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 
 function UserDashboardPage() {
@@ -57,6 +57,30 @@ function UserDashboardPage() {
               View Coupons
             </Button>
           </Paper>
+        </Grid>
+      </Grid>
+
+      <Divider sx={{ my: 4 }} />
+
+      <Typography variant="h6" gutterBottom>
+        Dashboard Views
+      </Typography>
+
+      <Grid container spacing={2}>
+        <Grid size={{ xs: 12, sm: 4 }}>
+          <Button fullWidth variant="outlined" onClick={() => navigate('/dashboard/home')}>
+            Personal Stats
+          </Button>
+        </Grid>
+        <Grid size={{ xs: 12, sm: 4 }}>
+          <Button fullWidth variant="outlined" onClick={() => navigate('/dashboard/lost')}>
+            My Lost Reports
+          </Button>
+        </Grid>
+        <Grid size={{ xs: 12, sm: 4 }}>
+          <Button fullWidth variant="outlined" onClick={() => navigate('/dashboard/found')}>
+            My Found Reports
+          </Button>
         </Grid>
       </Grid>
     </Container>

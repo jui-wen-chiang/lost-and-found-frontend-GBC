@@ -17,6 +17,20 @@ export function setTokens(access: string, refresh: string): void {
 export function clearTokens(): void {
   localStorage.removeItem(ACCESS_TOKEN_KEY);
   localStorage.removeItem(REFRESH_TOKEN_KEY);
+  localStorage.removeItem('user');
+}
+
+export function storeUser(user: object): void {
+  localStorage.setItem('user', JSON.stringify(user));
+}
+
+export function getStoredUser<T>(): T | null {
+  try {
+    const raw = localStorage.getItem('user');
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
 }
 
 interface JwtPayload {

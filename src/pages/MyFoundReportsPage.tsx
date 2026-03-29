@@ -5,6 +5,7 @@ import { useCategories } from '../hooks/useCategories'
 import { useLocations } from '../hooks/useLocations'
 import { useAuth } from '../context/AuthContext'
 import { getErrorMessage, isAuthError } from '../utils/errorMessages'
+import { useNavigate } from 'react-router-dom'
 import {
   Alert,
   Button,
@@ -15,6 +16,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material'
+import InventoryIcon from '@mui/icons-material/Inventory'
 
 const statusColorMap: Record<string, 'info' | 'warning' | 'success'> = {
   pending: 'warning',
@@ -24,6 +26,7 @@ const statusColorMap: Record<string, 'info' | 'warning' | 'success'> = {
 }
 
 export default function MyFoundReportsPage() {
+  const navigate = useNavigate()
   const { user } = useAuth()
   const { data: apiItems, isLoading, error } = useItems({ item_type: 'found' })
   const { data: categories = [] } = useCategories()
@@ -59,9 +62,18 @@ export default function MyFoundReportsPage() {
           {getErrorMessage(error, 'Failed to load found reports.')}
         </Alert>
       ) : items.length === 0 ? (
-        <Typography variant="body2" color="text.secondary">
-          You haven't reported any found items yet.
-        </Typography>
+        <Paper sx={{ p: 4, borderRadius: 3, textAlign: 'center' }}>
+          <InventoryIcon sx={{ fontSize: 56, color: 'text.disabled', mb: 1 }} />
+          <Typography variant="h6" sx={{ mb: 1 }}>
+            No found item reports yet
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Found something on campus? Report it to help the owner get it back.
+          </Typography>
+          <Button variant="contained" onClick={() => navigate('/items/new')}>
+            Report Found Item
+          </Button>
+        </Paper>
       ) : (
         <Stack spacing={1.5}>
           {items.map((r) => (

@@ -10,3 +10,13 @@ export async function fetchMyClaims(): Promise<ApiClaim[]> {
   const res = await apiClient.get<ApiClaim[]>('/api/claims/my/');
   return res.data;
 }
+
+export async function fetchAllClaims(): Promise<ApiClaim[]> {
+  const res = await apiClient.get<ApiClaim[]>('/api/claims/all/');
+  return res.data;
+}
+
+export async function updateClaimStatus(id: number, status: string): Promise<ApiClaim> {
+  const res = await apiClient.patch<ApiClaim>(`/api/claims/${id}/status/`, { status });
+  return res.data;
+}

@@ -1,5 +1,7 @@
-import { Box, Button, Chip, Typography } from '@mui/material'
+import { useNavigate } from 'react-router-dom'
+import { Box, Button, Chip, Paper, Stack, Typography } from '@mui/material'
 import AccessTimeIcon from '@mui/icons-material/AccessTime'
+import PostAddIcon from '@mui/icons-material/PostAdd'
 import { Item } from 'src/types/item'
 import { isExpired } from 'src/utils/itemUtils'
 
@@ -10,8 +12,21 @@ interface Props {
 }
 
 function ItemList({ items, onEdit, onDelete }: Props) {
+  const navigate = useNavigate()
+
   if (!items.length) {
-    return <Typography sx={{ mt: 2 }}>No items yet.</Typography>
+    return (
+      <Paper sx={{ p: 4, borderRadius: 3, textAlign: 'center', mt: 2 }}>
+        <PostAddIcon sx={{ fontSize: 56, color: 'text.disabled', mb: 1 }} />
+        <Typography variant="h6" sx={{ mb: 1 }}>No posts yet</Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          Report a lost or found item to see it here.
+        </Typography>
+        <Button variant="contained" onClick={() => navigate('/items/new')}>
+          Report Item
+        </Button>
+      </Paper>
+    )
   }
 
   return (

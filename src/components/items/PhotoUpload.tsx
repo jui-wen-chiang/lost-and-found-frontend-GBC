@@ -11,7 +11,7 @@ import CloseIcon from '@mui/icons-material/Close'
 import { Photo } from 'src/types/item'
 
 const MAX_FILES = 5
-const MAX_SIZE_MB = 1
+const MAX_SIZE_MB = 5
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 
 interface Props {

@@ -15,11 +15,21 @@ import {
 } from "@mui/material";
 import { useCreateAppointment } from "../hooks/useAppointments";
 
-const defaultSlots: Record<string, string[]> = {
-  "2026-03-10": ["10:00 AM", "11:00 AM", "1:00 PM"],
-  "2026-03-11": ["9:30 AM", "12:00 PM", "2:30 PM"],
-  "2026-03-12": ["10:30 AM", "1:30 PM", "3:00 PM"],
-};
+function getUpcomingSlots(): Record<string, string[]> {
+  const slots: Record<string, string[]> = {};
+  const times = [
+    ["10:00 AM", "11:00 AM", "1:00 PM"],
+    ["9:30 AM", "12:00 PM", "2:30 PM"],
+    ["10:30 AM", "1:30 PM", "3:00 PM"],
+  ];
+  for (let i = 0; i < 3; i++) {
+    const d = new Date();
+    d.setDate(d.getDate() + i + 1);
+    const key = d.toISOString().slice(0, 10);
+    slots[key] = times[i];
+  }
+  return slots;
+}
 
 function toISODateTime(date: string, time12: string): string {
   const [timePart, meridiem] = time12.split(" ");
@@ -34,7 +44,8 @@ export default function AppointmentSchedulerPage() {
   const { itemId } = useParams();
   const createAppointment = useCreateAppointment();
 
-  const dates = useMemo(() => Object.keys(defaultSlots), []);
+  const defaultSlots = useMemo(() => getUpcomingSlots(), []);
+  const dates = useMemo(() => Object.keys(defaultSlots), [defaultSlots]);
   const [selectedDate, setSelectedDate] = useState(dates[0]);
   const [selectedTime, setSelectedTime] = useState("");
   const [error, setError] = useState("");

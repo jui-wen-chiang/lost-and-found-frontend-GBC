@@ -355,12 +355,14 @@ function ItemDetailPage() {
           {/* CTA */}
           <Box sx={{ mt: 2 }}>
             {item.type === 'found' && item.status === 'approved' && (
-              <Button variant="contained" color="success" fullWidth size="large">
+              <Button variant="contained" color="success" fullWidth size="large"
+                onClick={() => navigate(`/claims/new/${item.id}`)}>
                 This is mine — Claim Item
               </Button>
             )}
             {item.type === 'lost' && item.status === 'approved' && (
-              <Button variant="contained" color="primary" fullWidth size="large">
+              <Button variant="contained" color="primary" fullWidth size="large"
+                onClick={() => navigate(`/claims/new/${item.id}`)}>
                 I Found This — Contact Owner
               </Button>
             )}

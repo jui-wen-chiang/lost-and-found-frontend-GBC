@@ -1,10 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { fetchMyClaims, createClaim } from '../api/services/claims';
+import { fetchMyClaims, createClaim, fetchAllClaims, updateClaimStatus } from '../api/services/claims';
 import type { ClaimCreateRequest } from '../types/api';
 
 export const claimKeys = {
   all: ['claims'] as const,
   mine: () => [...claimKeys.all, 'mine'] as const,
+  admin: () => [...claimKeys.all, 'admin'] as const,
 };
 
 export function useMyClaims() {
@@ -14,12 +15,29 @@ export function useMyClaims() {
   });
 }
 
+export function useAdminClaims() {
+  return useQuery({
+    queryKey: claimKeys.admin(),
+    queryFn: fetchAllClaims,
+  });
+}
+
 export function useCreateClaim() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: ClaimCreateRequest) => createClaim(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: claimKeys.mine() });
+    },
+  });
+}
+
+export function useUpdateClaimStatus() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, status }: { id: number; status: string }) => updateClaimStatus(id, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: claimKeys.admin() });
     },
   });
 }

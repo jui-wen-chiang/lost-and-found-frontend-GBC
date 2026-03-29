@@ -63,20 +63,25 @@ export function apiItemToItem(
     location_id: apiItem.location,
     location: loc?.name ?? `Location #${apiItem.location}`,
     campus: loc?.campus ?? undefined,
-    date_lost_found:
-      apiItem.item_type === 'lost'
+    date_lost_found: (() => {
+      const raw = apiItem.item_type === 'lost'
         ? (apiItem.lost_at ?? apiItem.created_at)
-        : (apiItem.found_at ?? apiItem.created_at),
+        : (apiItem.found_at ?? apiItem.created_at);
+      return raw ? raw.slice(0, 10) : '';
+    })(),
     status: apiItem.status,
     owner_id: apiItem.owner,
-    photos: [],
+    photos: (apiItem.images ?? []).map((img) => ({
+      id: img.id,
+      url: `${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/media/${img.file_path}`,
+    })),
   };
 }
 
 /** Convert the UI FormValues into a backend ItemCreateRequest. */
 export function formValuesToCreateRequest(form: FormValues): ItemCreateRequest {
   const itemType = form.type as 'lost' | 'found';
-  return {
+  const req: ItemCreateRequest = {
     title: form.title,
     description: form.description,
     item_type: itemType,
@@ -85,6 +90,15 @@ export function formValuesToCreateRequest(form: FormValues): ItemCreateRequest {
     lost_at: itemType === 'lost' ? form.date_lost_found : null,
     found_at: itemType === 'found' ? form.date_lost_found : null,
   };
+  const files = form.photos.filter((p) => p.file).map((p) => p.file as File);
+  if (files.length > 0) {
+    req.upload_images = files;
+  }
+  const existingIds = form.photos
+    .filter((p) => !p.file && typeof p.id === 'number')
+    .map((p) => p.id as number);
+  req.existing_image_ids = existingIds;
+  return req;
 }
 
 /** Convert UI Filters into backend query parameters. */

@@ -44,6 +44,7 @@ const GUEST_LINKS = [{ label: 'Home', to: '/' }]
 const ADMIN_MENU_ITEMS = [
   { label: 'Admin Dashboard', to: '/admin' },
   { label: 'Audit Queue', to: '/admin/audit' },
+  { label: 'Claims', to: '/admin/claims' },
   { label: 'Appointments', to: '/admin/appointments' },
   { label: 'Reports', to: '/admin/reports' },
   { label: 'User Roles (IAM)', to: '/admin/iam' },
@@ -149,10 +150,10 @@ function NavBar() {
             </Stack>
           ) : (
             <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
-              <Tooltip title={user?.email ?? 'Account'}>
+              <Tooltip title={user?.full_name || user?.email || 'Account'}>
                 <IconButton onClick={(e) => setUserAnchor(e.currentTarget)} size="small">
                   <Avatar sx={{ width: 32, height: 32, fontSize: '0.85rem', bgcolor: isAdmin ? 'secondary.main' : 'primary.main' }}>
-                    {user?.email?.[0]?.toUpperCase() ?? '?'}
+                    {user?.full_name?.[0]?.toUpperCase() ?? user?.email?.[0]?.toUpperCase() ?? '?'}
                   </Avatar>
                 </IconButton>
               </Tooltip>
@@ -163,7 +164,10 @@ function NavBar() {
                 slotProps={{ paper: { elevation: 2, sx: { mt: 1, minWidth: 200, borderRadius: 2 } } }}
               >
                 <Box sx={{ px: 2, py: 1.5 }}>
-                  <Typography variant="body2" fontWeight={600} noWrap>{user?.email}</Typography>
+                  {user?.full_name && (
+                    <Typography variant="body2" fontWeight={600} noWrap>{user.full_name}</Typography>
+                  )}
+                  <Typography variant="body2" color={user?.full_name ? 'text.secondary' : undefined} fontWeight={user?.full_name ? undefined : 600} noWrap>{user?.email}</Typography>
                   <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'capitalize' }}>{user?.role}</Typography>
                 </Box>
                 <Divider />

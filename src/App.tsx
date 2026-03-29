@@ -31,6 +31,7 @@ import MyFoundReportsPage from './pages/MyFoundReportsPage'
 // Admin
 import AdminDashboardPage from './pages/admin/AdminDashboardPage'
 import AdminAppointmentsPage from './pages/admin/AdminAppointmentsPage'
+import AdminClaimsPage from './pages/admin/AdminClaimsPage'
 import ReportsPage from './pages/admin/ReportsPage'
 import IamPage from './pages/admin/IamPage'
 import PostVerificationPage from './pages/admin/PostVerificationPage'
@@ -70,6 +71,7 @@ function App() {
         <Route path="/admin/audit" element={<ProtectedRoute requiredRole="admin"><AdminAuditQueuePage /></ProtectedRoute>} />
         <Route path="/admin/audit/:id" element={<ProtectedRoute requiredRole="admin"><AdminAuditDetailPage /></ProtectedRoute>} />
         <Route path="/admin/appointments" element={<ProtectedRoute requiredRole="admin"><AdminAppointmentsPage /></ProtectedRoute>} />
+        <Route path="/admin/claims" element={<ProtectedRoute requiredRole="admin"><AdminClaimsPage /></ProtectedRoute>} />
         <Route path="/admin/reports" element={<ProtectedRoute requiredRole="admin"><ReportsPage /></ProtectedRoute>} />
         <Route path="/admin/iam" element={<ProtectedRoute requiredRole="admin"><IamPage /></ProtectedRoute>} />
         <Route path="/admin/verify" element={<ProtectedRoute requiredRole="admin"><PostVerificationPage /></ProtectedRoute>} />

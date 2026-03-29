@@ -1,7 +1,8 @@
 import React from "react";
-import { Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 import {
   Box,
+  Button,
   Chip,
   CircularProgress,
   Container,
@@ -11,6 +12,7 @@ import {
   Typography,
   Alert,
 } from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
 import { useMyClaims } from "../hooks/useClaims";
 
 const statusColorMap: Record<string, "warning" | "success" | "error" | "info"> = {
@@ -21,6 +23,7 @@ const statusColorMap: Record<string, "warning" | "success" | "error" | "info"> =
 };
 
 export default function MyClaimsPage() {
+  const navigate = useNavigate();
   const { data: claims, isLoading, error } = useMyClaims();
 
   if (isLoading) {
@@ -46,7 +49,18 @@ export default function MyClaimsPage() {
       </Typography>
 
       {(!claims || claims.length === 0) && (
-        <Alert severity="info">You have no claim requests yet.</Alert>
+        <Paper sx={{ p: 4, borderRadius: 3, textAlign: "center" }}>
+          <SearchIcon sx={{ fontSize: 56, color: "text.disabled", mb: 1 }} />
+          <Typography variant="h6" sx={{ mb: 1 }}>
+            No claim requests yet
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Browse found items and submit a claim if you recognize something as yours.
+          </Typography>
+          <Button variant="contained" onClick={() => navigate("/")}>
+            Browse Items
+          </Button>
+        </Paper>
       )}
 
       <Stack spacing={1.5} sx={{ maxWidth: 720 }}>
@@ -78,11 +92,22 @@ export default function MyClaimsPage() {
               </Link>
             </Box>
 
-            <Chip
-              label={c.status}
-              size="small"
-              color={statusColorMap[c.status] ?? "default"}
-            />
+            <Stack direction="row" spacing={1} alignItems="center">
+              {c.status === "approved" && (
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={() => navigate(`/appointments/schedule/${c.id}`)}
+                >
+                  Schedule Appointment
+                </Button>
+              )}
+              <Chip
+                label={c.status}
+                size="small"
+                color={statusColorMap[c.status] ?? "default"}
+              />
+            </Stack>
           </Paper>
         ))}
       </Stack>
