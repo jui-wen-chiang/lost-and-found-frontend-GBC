@@ -15,8 +15,7 @@
     "isolatedModules": true,
     "types": ["vite/client", "node"],
     
-    // 加入這兩個配置
-    "baseUrl": ".",
+    "ignoreDeprecations": "5.0",
     "paths": {
       "@/*": ["./src/*"],
       "src/*": ["./src/*"]
