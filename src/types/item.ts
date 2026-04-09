@@ -71,10 +71,19 @@ export function apiItemToItem(
     })(),
     status: apiItem.status,
     owner_id: apiItem.owner,
-    photos: (apiItem.images ?? []).map((img) => ({
-      id: img.id,
-      url: `${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/media/${img.file_path}`,
-    })),
+    // photos: (apiItem.images ?? []).map((img) => ({
+    //   id: img.id,
+    //   // url: img.url,
+    //   url: `${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/media/${img.file_path}`,
+    // })),
+    photos: (apiItem.images ?? []).map((img) => {
+      console.log('[image]', img)  // ← 印出每張圖片的完整資料
+      return {
+        id: img.id,
+        url: img.url,
+        // url: `${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/media/${img.file_path}`,
+      }
+    }),
   };
 }
 

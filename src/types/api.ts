@@ -110,6 +110,7 @@ export interface ApiImage {
   original_filename: string;
   is_primary: boolean;
   uploaded_at: string;
+  url: string;
 }
 
 export interface ApiItem {
